@@ -1,0 +1,137 @@
+.matches-screen {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  background-color: var(--color-gray-50);
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.matches-screen::-webkit-scrollbar {
+  display: none;
+}
+
+.matches-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  background-color: white;
+  border-radius: 20px;
+  text-align: center;
+  color: var(--color-gray-500);
+  gap: 16px;
+}
+
+.matches-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.match-list-item {
+  background-color: white;
+  border-radius: 20px;
+  padding: 16px;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.match-list-item:active {
+  transform: scale(0.98);
+}
+
+.match-avatars-overlap {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+}
+
+.avatar-theirs {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  position: absolute;
+  top: 0;
+  left: 0;
+  border: 2px solid white;
+  z-index: 2;
+}
+
+.avatar-ours {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  border: 2px solid white;
+  z-index: 1;
+}
+
+.match-item-content {
+  flex: 1;
+  overflow: hidden;
+}
+
+.match-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.match-item-header h4 {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-gray-900);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.match-time {
+  font-size: 11px;
+  color: var(--color-gray-400);
+  flex-shrink: 0;
+}
+
+.match-latest-msg {
+  font-size: 13px;
+  color: var(--color-gray-600);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 8px;
+}
+
+.match-meta {
+  display: flex;
+  gap: 8px;
+}
+
+.meta-badge {
+  font-size: 11px;
+  color: var(--color-turquoise-dark);
+  background-color: rgba(0, 210, 200, 0.1);
+  padding: 2px 8px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+}

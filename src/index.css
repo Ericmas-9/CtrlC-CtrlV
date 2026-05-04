@@ -1,0 +1,72 @@
+:root {
+  --color-turquoise: #00d2c8;
+  --color-turquoise-dark: #00b0a7;
+  --color-amber: #ffb703;
+  --color-amber-light: #ffc940;
+  --color-white: #ffffff;
+  --color-gray-50: #f8fafc;
+  --color-gray-100: #f1f5f9;
+  --color-gray-200: #e2e8f0;
+  --color-gray-800: #1e293b;
+  --color-gray-900: #0f172a;
+  --color-dark-bg: #111424;
+  --color-red: #ff4b4b;
+  --font-family: 'Poppins', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--color-dark-bg);
+  color: var(--color-gray-900);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  /* Removed global overflow hidden to allow proper layout constraints */
+}
+
+/* Strict mobile wrapper to simulate a phone on desktop */
+#root {
+  width: 100%;
+  max-width: 414px;
+  height: 100vh;
+  max-height: 896px;
+  background-color: var(--color-gray-50);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 0 50px rgba(0,0,0,0.5); /* Just for desktop preview distinction */
+  overflow: hidden; /* Keeps the frame clean */
+}
+
+/* Common App Container */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+}
+
+/* The scrollable area between TopBar and BottomNav */
+.main-content-area {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background-color: var(--color-gray-50);
+  
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  /* Hide scrollbar for IE, Edge and Firefox */
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}

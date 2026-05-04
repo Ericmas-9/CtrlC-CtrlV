@@ -1,0 +1,146 @@
+.plan-details-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(17, 20, 36, 0.8);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.plan-details-card {
+  width: 100%;
+  height: 85%;
+  background-color: white;
+  border-radius: 30px 30px 0 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  animation: slideUpModal 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes slideUpModal {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.close-modal-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: rgba(255,255,255,0.9);
+  border: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--color-gray-900);
+  z-index: 10;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.modal-header-img {
+  width: 100%;
+  height: 250px;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.modal-header-gradient {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100px;
+  background: linear-gradient(to top, white, transparent);
+}
+
+.modal-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 24px 40px 24px;
+  margin-top: -30px;
+  position: relative;
+  z-index: 2;
+}
+
+.modal-squad-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.modal-leader-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 4px solid white;
+  object-fit: cover;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.modal-squad-name {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--color-gray-900);
+  line-height: 1.2;
+}
+
+.modal-squad-meta {
+  font-size: 13px;
+  color: var(--color-gray-500);
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+.modal-plan-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-gray-900);
+  margin-bottom: 16px;
+}
+
+.modal-badges {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 32px;
+}
+
+.modal-description h4 {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-gray-400);
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+}
+
+.modal-description p {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--color-gray-700);
+  margin-bottom: 32px;
+}
+
+.modal-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
