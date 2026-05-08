@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { X, Heart, PlusCircle } from 'lucide-react';
+import { useLanguage } from '../i18n/LanguageContext';
 import './Notifications.css';
 
 const Notifications = ({ notifications, onClose }) => {
+  const { t } = useLanguage();
   const [filter, setFilter] = useState('all'); // 'all', 'like', 'join'
 
   const filteredNotifications = notifications.filter(notif => {
@@ -14,7 +16,7 @@ const Notifications = ({ notifications, onClose }) => {
     <div className="notifications-screen">
       <div className="notifications-header">
         <div style={{ width: '24px' }}></div> {/* Spacer */}
-        <h3>Notifications</h3>
+        <h3>{t('notificationsTitle')}</h3>
         <button onClick={onClose} className="close-btn-ghost">
           <X size={24} />
         </button>
@@ -25,26 +27,26 @@ const Notifications = ({ notifications, onClose }) => {
           className={`filter-btn ${filter === 'all' ? 'active' : ''}`}
           onClick={() => setFilter('all')}
         >
-          All
+          {t('all')}
         </button>
         <button 
           className={`filter-btn ${filter === 'like' ? 'active' : ''}`}
           onClick={() => setFilter('like')}
         >
-          Likes
+          {t('likes')}
         </button>
         <button 
           className={`filter-btn ${filter === 'join' ? 'active' : ''}`}
           onClick={() => setFilter('join')}
         >
-          Joins
+          {t('joins')}
         </button>
       </div>
 
       <div className="notifications-list">
         {filteredNotifications.length === 0 ? (
           <div className="empty-state">
-            <p>No new notifications.</p>
+            <p>{t('noNewNotifs')}</p>
           </div>
         ) : (
           filteredNotifications.map(notif => (

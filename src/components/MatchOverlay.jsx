@@ -1,8 +1,10 @@
 import React from 'react';
 import './MatchOverlay.css';
 import { Heart, MessageCircle, RefreshCcw, Zap } from 'lucide-react';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const MatchOverlay = ({ onClose, onOpenChat, image1, image2, squad }) => {
+  const { t } = useLanguage();
   return (
     <div className="match-overlay">
       <div className="match-content">
@@ -11,9 +13,9 @@ const MatchOverlay = ({ onClose, onOpenChat, image1, image2, squad }) => {
             <Zap size={14} fill="currentColor" /> IT'S HAPPENING!
           </div>
           <h1 className="match-title">
-            It's a<br /><span className="match-highlight">SquadMatch!</span>
+            {t('itsA')}<br /><span className="match-highlight">{t('squadMatch')}</span>
           </h1>
-          <p className="match-subtitle">Both squads liked each other 🎉</p>
+          <p className="match-subtitle">{t('bothLiked')}</p>
         </div>
 
         <div className="match-cards-container">
@@ -24,7 +26,7 @@ const MatchOverlay = ({ onClose, onOpenChat, image1, image2, squad }) => {
             <Heart fill="var(--color-red)" color="var(--color-red)" size={24} />
           </div>
           <div className="match-card match-card-right" style={{ backgroundImage: `url(${image2})` }}>
-            <div className="match-card-label">Your Squad</div>
+            <div className="match-card-label">{t('yourSquad')}</div>
           </div>
         </div>
 
@@ -35,10 +37,10 @@ const MatchOverlay = ({ onClose, onOpenChat, image1, image2, squad }) => {
 
         <div className="match-actions">
           <button className="btn-primary" onClick={onOpenChat}>
-            <MessageCircle size={20} /> Open SquadChat
+            <MessageCircle size={20} /> {t('openSquadChat')}
           </button>
           <button className="btn-ghost" onClick={onClose}>
-            <RefreshCcw size={18} /> Keep Swiping
+            <RefreshCcw size={18} /> {t('keepSwiping')}
           </button>
         </div>
       </div>

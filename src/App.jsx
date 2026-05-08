@@ -11,8 +11,11 @@ import Matches from './screens/Matches';
 import Notifications from './screens/Notifications';
 import PlanDetailsModal from './components/PlanDetailsModal';
 import Settings from './screens/Settings';
+import StatusBar from './components/StatusBar';
+import { useLanguage } from './i18n/LanguageContext';
 
 function App() {
+  const { t } = useLanguage();
   const [currentTab, setCurrentTab] = useState('discover');
   const [showMatchOverlay, setShowMatchOverlay] = useState(false);
   const [activeChatId, setActiveChatId] = useState(null);
@@ -24,7 +27,8 @@ function App() {
   const [userProfile, setUserProfile] = useState({
     name: 'Sofia Martinez',
     age: 26,
-    bio: 'Beach lover, padel obsessive, and always down for a spontaneous adventure.',
+    bio: '',
+    bioKey: 'user_bio',
     tags: ['Music', 'Fitness', 'Travel'],
     photo: myPhoto 
   });
@@ -33,132 +37,142 @@ function App() {
     {
       id: 'squad-1',
       squadName: 'The Beach Boys',
-      meta: 'Ages 22-28 · Active & Social',
-      planTitle: 'Sunset Beach Volleyball & Drinks',
+      metaKey: 'sq1_meta',
+      titleKey: 'sq1_title',
       location: 'Santa Monica, CA',
-      distance: '2.3 mi',
+      lat: 34.0052, lng: -118.4975,
+      distanceValue: '2.3',
       membersCount: 4,
       image: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=800&q=80",
       leaderAvatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=150&q=80',
       tags: ['Outdoors', 'Sports', 'Cocktails'],
-      description: 'We are setting up a net near Tower 24 at 5 PM. Bringing a cooler with some beers, everyone is welcome to join for some casual 2v2s or 4v4s. Post-game drinks at the pier!'
+      descKey: 'sq1_desc'
     },
     {
       id: 'squad-2',
       squadName: 'Weekend Warriors',
-      meta: 'Ages 24-32 · Chill Vibes',
-      planTitle: 'Sunday Morning Hike & Coffee',
+      metaKey: 'sq2_meta',
+      titleKey: 'sq2_title',
       location: 'Griffith Park',
-      distance: '5.1 mi',
+      lat: 34.1184, lng: -118.3004,
+      distanceValue: '5.1',
       membersCount: 3,
       image: "https://images.unsplash.com/photo-1551632811-561732d1e306?auto=format&fit=crop&w=800&q=80",
       leaderAvatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=150&q=80',
       tags: ['Hiking', 'Outdoors', 'Coffee'],
-      description: 'Doing the main trail up to the observatory. Easy pace, good vibes, grabbing iced lattes at the cafe afterwards. Dogs welcome!'
+      descKey: 'sq2_desc'
     },
     {
       id: 'squad-3',
       squadName: 'Padel Pros',
-      meta: 'Ages 21-30 · Competitive',
-      planTitle: 'Padel Tournament Prep',
+      metaKey: 'sq3_meta',
+      titleKey: 'sq3_title',
       location: 'Venice Beach Courts',
-      distance: '1.2 mi',
+      lat: 33.9850, lng: -118.4695,
+      distanceValue: '1.2',
       membersCount: 2,
       image: "https://images.unsplash.com/photo-1622283084705-cb66fc4ba6e9?auto=format&fit=crop&w=800&q=80",
       leaderAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80',
       tags: ['Padel', 'Sports', 'Fitness'],
-      description: 'Looking for another duo to practice matches with before the weekend tournament. Intermediate to advanced level preferred.'
+      descKey: 'sq3_desc'
     },
     {
       id: 'squad-4',
       squadName: 'Game Night Crew',
-      meta: 'Ages 25-35 · Geeks & Gamers',
-      planTitle: 'Board Games & Pizza',
+      metaKey: 'sq4_meta',
+      titleKey: 'sq4_title',
       location: 'Downtown LA',
-      distance: '10.5 mi',
+      lat: 34.0430, lng: -118.2673,
+      distanceValue: '10.5',
       membersCount: 5,
       image: "https://images.unsplash.com/photo-1610890716171-6b1bb98ffaed?auto=format&fit=crop&w=800&q=80",
       leaderAvatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=150&q=80',
       tags: ['Gaming', 'Chill', 'Food'],
-      description: 'Hosting a massive game night. We have Catan, Secret Hitler, and Mario Kart. Ordering pizzas around 8 PM. Bring your own drinks!'
+      descKey: 'sq4_desc'
     },
     {
       id: 'squad-5',
       squadName: 'Sunset Cruisers',
-      meta: 'Ages 20-29 · Adventurous',
-      planTitle: 'Rollerblading the Strand',
+      metaKey: 'sq5_meta',
+      titleKey: 'sq5_title',
       location: 'Hermosa Beach',
-      distance: '12.0 mi',
+      lat: 33.8620, lng: -118.4000,
+      distanceValue: '12.0',
       membersCount: 3,
       image: "https://images.unsplash.com/photo-1551024506-0cb9a475d40a?auto=format&fit=crop&w=800&q=80",
       leaderAvatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=150&q=80',
       tags: ['Sports', 'Beach', 'Outdoors'],
-      description: 'Cruising down to Manhattan beach and back. Will probably stop for tacos along the way. All skill levels welcome, we go at a chill pace.'
+      descKey: 'sq5_desc'
     },
     {
       id: 'squad-6',
       squadName: 'The Foodies',
-      meta: 'Ages 26-38 · Food & Culture',
-      planTitle: 'Night Market Crawl',
+      metaKey: 'sq6_meta',
+      titleKey: 'sq6_title',
       location: 'Arts District',
-      distance: '14.2 mi',
+      lat: 34.0406, lng: -118.2357,
+      distanceValue: '14.2',
       membersCount: 4,
       image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=800&q=80",
       leaderAvatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&q=80',
       tags: ['Food', 'Drinks', 'Chill'],
-      description: 'Going to hit up 3-4 different food stands. Goal is to share everything so we can try as much as possible!'
+      descKey: 'sq6_desc'
     },
     {
       id: 'squad-7',
       squadName: 'Surf & Sand',
-      meta: 'Ages 22-30 · Early Birds',
-      planTitle: 'Dawn Patrol Surf Session',
+      metaKey: 'sq7_meta',
+      titleKey: 'sq7_title',
       location: 'Malibu Surfrider',
-      distance: '18.4 mi',
+      lat: 34.0360, lng: -118.6919,
+      distanceValue: '18.4',
       membersCount: 2,
       image: "https://images.unsplash.com/photo-1502680390469-be75c86b636f?auto=format&fit=crop&w=800&q=80",
       leaderAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
       tags: ['Beach', 'Sports', 'Outdoors'],
-      description: 'Swipes up if you like waking up at 5:30 AM. Waves should be 3-4ft. Hitting the breakfast burrito spot after.'
+      descKey: 'sq7_desc'
     },
     {
       id: 'squad-8',
       squadName: 'Creative Collective',
-      meta: 'Ages 24-34 · Artsy',
-      planTitle: 'Pottery & Wine Night',
+      metaKey: 'sq8_meta',
+      titleKey: 'sq8_title',
       location: 'Silver Lake',
-      distance: '15.1 mi',
+      lat: 34.0869, lng: -118.2737,
+      distanceValue: '15.1',
       membersCount: 3,
       image: "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=800&q=80",
       leaderAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80',
       tags: ['Art', 'Drinks', 'Chill'],
-      description: 'Booked a private table at the clay studio. Bring your favorite bottle of wine. Let’s get messy and make some weird mugs.'
+      descKey: 'sq8_desc'
     },
     {
       id: 'squad-9',
       squadName: 'Rave Fam',
-      meta: 'Ages 21-29 · Night Owls',
-      planTitle: 'Underground Techno Showcase',
+      metaKey: 'sq9_meta',
+      titleKey: 'sq9_title',
       location: 'Warehouse District',
-      distance: '11.8 mi',
+      lat: 34.0422, lng: -118.2380,
+      distanceValue: '11.8',
       membersCount: 6,
       image: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=80",
       leaderAvatar: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=150&q=80',
       tags: ['Music', 'Dancing', 'Drinks'],
-      description: 'Got tickets to the secret location drop. Pre-game at our spot at 10 PM. Looking for fun energy to join the crew.'
+      descKey: 'sq9_desc'
     },
     {
       id: 'squad-10',
       squadName: 'The Yogis',
-      meta: 'Ages 23-35 · Wellness',
-      planTitle: 'Sunset Beach Yoga Flow',
+      metaKey: 'sq10_meta',
+      titleKey: 'sq10_title',
       location: 'Santa Monica Beach',
-      distance: '1.5 mi',
+      lat: 34.0100, lng: -118.4965,
+      distanceValue: '1.5',
       membersCount: 8,
-      image: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=800&q=80", // reused beach pic
+      image: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=800&q=80", 
       leaderAvatar: 'https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?auto=format&fit=crop&w=150&q=80',
       tags: ['Fitness', 'Beach', 'Chill'],
-      description: 'Leading a gentle 60-minute Vinyasa flow right as the sun goes down. Bring a mat or towel. Donations appreciated but not required!'
+      descKey: 'sq10_desc'
     }
   ]);
 
@@ -167,8 +181,8 @@ function App() {
     {
       id: 'notif-1',
       type: 'join',
-      text: 'Marta joined your plan: Sunset Volleyball',
-      time: '2m ago',
+      text: t('userJoined', { user: 'Marta', plan: t('sq1_title') || 'Sunset Volleyball' }),
+      time: t('minsAgo'),
       avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80'
     }
   ]);
@@ -179,8 +193,8 @@ function App() {
     const newNotif = {
       id: Date.now().toString(),
       type: 'like',
-      text: `You liked ${squad.squadName}'s plan: ${squad.planTitle}`,
-      time: 'Just now',
+      text: t('youLiked', { squad: squad.squadName, plan: squad.titleKey ? t(squad.titleKey) : squad.planTitle }),
+      time: t('justNow'),
       avatar: squad.leaderAvatar
     };
     setNotifications([newNotif, ...notifications]);
@@ -196,7 +210,7 @@ function App() {
       messages: [
         { id: 1, text: "Hey guys! We matched! Stoked for the plan.", sender: 'them', user: 'Mike', avatar: squad.leaderAvatar }
       ],
-      lastActive: 'Just now'
+      lastActive: t('justNow')
     };
     setMatches([newMatch, ...matches]);
     setShowMatchOverlay(false);
@@ -210,8 +224,8 @@ function App() {
     setNotifications([{
       id: Date.now().toString(),
       type: 'create',
-      text: `You successfully posted a new plan: ${newPlan.planTitle}`,
-      time: 'Just now',
+      text: t('postedPlan', { plan: newPlan.planTitle || newPlan.titleKey }),
+      time: t('justNow'),
       avatar: userProfile.photo
     }, ...notifications]);
   };
@@ -250,19 +264,19 @@ function App() {
   const getTopBarTitle = () => {
     switch (currentTab) {
       case 'discover': return null; 
-      case 'create': return 'Create a Plan';
-      case 'matches': return 'My Plans & Matches';
-      case 'profile': return 'My Profile';
-      case 'notifications': return 'Notifications';
-      case 'settings': return 'Settings & Preferences';
+      case 'create': return t('createPlanTitle');
+      case 'matches': return t('matchesTitle');
+      case 'profile': return t('profileTitle');
+      case 'notifications': return t('notificationsTitle');
+      case 'settings': return t('settingsTitle');
       default: return null;
     }
   };
   
   const getTopBarSubtitle = () => {
-    if (currentTab === 'create') return "Tell others what you're planning";
-    if (currentTab === 'matches') return 'Active chats & pending requests';
-    if (currentTab === 'profile') return 'Individual identity & vibes';
+    if (currentTab === 'create') return t('createPlanSubtitle');
+    if (currentTab === 'matches') return t('matchesSubtitle');
+    if (currentTab === 'profile') return t('profileSubtitle');
     return null;
   }
 
@@ -272,6 +286,8 @@ function App() {
 
   return (
     <div className="app-container">
+      <StatusBar />
+      
       {/* Top Bar Area */}
       {!hideTopBar && (
         <TopBar 
@@ -285,7 +301,9 @@ function App() {
       
       {/* Main Content Area: Enforces Scrolling */}
       <main className="main-content-area">
-        {renderScreen()}
+        <div key={currentTab} className="fade-in">
+          {renderScreen()}
+        </div>
       </main>
 
       {/* Bottom Navigation Area */}
@@ -308,7 +326,11 @@ function App() {
       {selectedPlanDetails && (
         <PlanDetailsModal 
           squad={selectedPlanDetails} 
-          onClose={() => setSelectedPlanDetails(null)} 
+          onClose={() => setSelectedPlanDetails(null)}
+          onJoin={() => {
+            handleLike(selectedPlanDetails);
+            setSelectedPlanDetails(null);
+          }}
         />
       )}
 

@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { ChevronLeft, Lock, Shield, Link, Star, Ban, History, Eye, LogOut, ExternalLink, Instagram } from 'lucide-react';
+import { ChevronLeft, Lock, Shield, Link, Star, Ban, History, Eye, LogOut, ExternalLink, Instagram, Globe } from 'lucide-react';
+import { useLanguage } from '../i18n/LanguageContext';
 import './Settings.css';
 
 const Settings = ({ onBack, onLogout }) => {
-  const [activeSubView, setActiveSubView] = useState(null); // 'phone', 'privacy', 'safety', 'linked', 'favorites', 'blocked', 'history', 'visibility', 'logout'
+  const { t, language, changeLanguage } = useLanguage();
+  const [activeSubView, setActiveSubView] = useState(null); // 'phone', 'privacy', 'safety', 'linked', 'favorites', 'blocked', 'history', 'visibility', 'logout', 'lang'
   const [phoneInput, setPhoneInput] = useState('+1 (555) 123-4567');
   const [visibility, setVisibility] = useState('public');
 
@@ -14,8 +16,8 @@ const Settings = ({ onBack, onLogout }) => {
   const renderPhoneModal = () => (
     <div className="settings-modal-overlay">
       <div className="settings-modal">
-        <h3>Update Phone Number</h3>
-        <p>A verification code will be sent to this number.</p>
+        <h3>{t('updatePhone')}</h3>
+        <p>{t('phoneDesc')}</p>
         <input 
           type="text" 
           className="settings-input" 
@@ -23,8 +25,8 @@ const Settings = ({ onBack, onLogout }) => {
           onChange={(e) => setPhoneInput(e.target.value)} 
         />
         <div className="modal-actions">
-          <button className="btn-cancel" onClick={handleBack}>Cancel</button>
-          <button className="btn-save" onClick={handleBack}>Save</button>
+          <button className="btn-cancel" onClick={handleBack}>{t('cancel')}</button>
+          <button className="btn-save" onClick={handleBack}>{t('save')}</button>
         </div>
       </div>
     </div>
@@ -33,11 +35,11 @@ const Settings = ({ onBack, onLogout }) => {
   const renderLogoutModal = () => (
     <div className="settings-modal-overlay">
       <div className="settings-modal">
-        <h3>Log Out</h3>
-        <p>Are you sure you want to log out? You will need to verify your phone number to log back in.</p>
+        <h3>{t('logOut')}</h3>
+        <p>{t('logoutConfirm')}</p>
         <div className="modal-actions">
-          <button className="btn-cancel" onClick={handleBack}>Cancel</button>
-          <button className="btn-danger" onClick={onLogout}>Yes, Log Out</button>
+          <button className="btn-cancel" onClick={handleBack}>{t('cancel')}</button>
+          <button className="btn-danger" onClick={onLogout}>{t('yesLogout')}</button>
         </div>
       </div>
     </div>
@@ -47,15 +49,15 @@ const Settings = ({ onBack, onLogout }) => {
     <div className="sub-view-container">
       <div className="sub-view-header">
         <button className="icon-btn-ghost" onClick={handleBack}><ChevronLeft size={24} /></button>
-        <h2>Privacy</h2>
+        <h2>{t('privacy')}</h2>
         <div style={{ width: '40px' }}></div>
       </div>
       <div className="sub-view-content">
         <div className="settings-section">
           <div className="settings-item toggle-row">
             <div className="settings-item-text">
-              <h4>Show my age</h4>
-              <p>Allow others to see your age on your profile</p>
+              <h4>{t('showMyAge')}</h4>
+              <p>{t('showMyAgeDesc')}</p>
             </div>
             <label className="toggle-switch">
               <input type="checkbox" defaultChecked />
@@ -64,8 +66,8 @@ const Settings = ({ onBack, onLogout }) => {
           </div>
           <div className="settings-item toggle-row">
             <div className="settings-item-text">
-              <h4>Last seen</h4>
-              <p>Show when you were last active</p>
+              <h4>{t('lastSeen')}</h4>
+              <p>{t('lastSeenDesc')}</p>
             </div>
             <label className="toggle-switch">
               <input type="checkbox" defaultChecked />
@@ -74,8 +76,8 @@ const Settings = ({ onBack, onLogout }) => {
           </div>
           <div className="settings-item toggle-row">
             <div className="settings-item-text">
-              <h4>Read receipts</h4>
-              <p>Show when you've read a message</p>
+              <h4>{t('readReceipts')}</h4>
+              <p>{t('readReceiptsDesc')}</p>
             </div>
             <label className="toggle-switch">
               <input type="checkbox" />
@@ -91,26 +93,26 @@ const Settings = ({ onBack, onLogout }) => {
     <div className="sub-view-container">
       <div className="sub-view-header">
         <button className="icon-btn-ghost" onClick={handleBack}><ChevronLeft size={24} /></button>
-        <h2>Safety Center</h2>
+        <h2>{t('safetyCenter')}</h2>
         <div style={{ width: '40px' }}></div>
       </div>
       <div className="sub-view-content">
         <div className="settings-section">
           <div className="settings-item">
             <div className="settings-item-text">
-              <h4>Community Guidelines</h4>
+              <h4>{t('communityGuidelines')}</h4>
             </div>
             <ExternalLink size={18} color="var(--color-gray-400)" />
           </div>
           <div className="settings-item">
             <div className="settings-item-text">
-              <h4>Safety Tips</h4>
+              <h4>{t('safetyTips')}</h4>
             </div>
             <ExternalLink size={18} color="var(--color-gray-400)" />
           </div>
           <div className="settings-item">
             <div className="settings-item-text">
-              <h4 style={{ color: 'var(--color-red)' }}>Report a Problem</h4>
+              <h4 style={{ color: 'var(--color-red)' }}>{t('reportProblem')}</h4>
             </div>
           </div>
         </div>
@@ -122,7 +124,7 @@ const Settings = ({ onBack, onLogout }) => {
     <div className="sub-view-container">
       <div className="sub-view-header">
         <button className="icon-btn-ghost" onClick={handleBack}><ChevronLeft size={24} /></button>
-        <h2>Linked Accounts</h2>
+        <h2>{t('linkedAccounts')}</h2>
         <div style={{ width: '40px' }}></div>
       </div>
       <div className="sub-view-content">
@@ -130,7 +132,7 @@ const Settings = ({ onBack, onLogout }) => {
           <div className="settings-item">
             <div className="settings-item-icon"><Instagram size={24} color="#E1306C" /></div>
             <div className="settings-item-text"><h4>Instagram</h4></div>
-            <button className="ghost-action-btn">Disconnect</button>
+            <button className="ghost-action-btn">{t('disconnect')}</button>
           </div>
           <div className="settings-item">
             <div className="settings-item-icon">
@@ -139,7 +141,7 @@ const Settings = ({ onBack, onLogout }) => {
               </div>
             </div>
             <div className="settings-item-text"><h4>Spotify</h4></div>
-            <button className="ghost-action-btn connected">Connect</button>
+            <button className="ghost-action-btn connected">{t('connect')}</button>
           </div>
         </div>
       </div>
@@ -150,7 +152,7 @@ const Settings = ({ onBack, onLogout }) => {
     <div className="sub-view-container">
       <div className="sub-view-header">
         <button className="icon-btn-ghost" onClick={handleBack}><ChevronLeft size={24} /></button>
-        <h2>Favorite Matches</h2>
+        <h2>{t('favoriteMatches')}</h2>
         <div style={{ width: '40px' }}></div>
       </div>
       <div className="sub-view-content">
@@ -180,18 +182,18 @@ const Settings = ({ onBack, onLogout }) => {
     <div className="sub-view-container">
       <div className="sub-view-header">
         <button className="icon-btn-ghost" onClick={handleBack}><ChevronLeft size={24} /></button>
-        <h2>Blocked Accounts</h2>
+        <h2>{t('blockedAccounts')}</h2>
         <div style={{ width: '40px' }}></div>
       </div>
       <div className="sub-view-content">
         <div className="settings-section">
           <div className="settings-item">
             <div className="settings-item-text"><h4>User 123</h4></div>
-            <button className="ghost-action-btn">Unblock</button>
+            <button className="ghost-action-btn">{t('unblock')}</button>
           </div>
           <div className="settings-item">
             <div className="settings-item-text"><h4>Secret Squad</h4></div>
-            <button className="ghost-action-btn">Unblock</button>
+            <button className="ghost-action-btn">{t('unblock')}</button>
           </div>
         </div>
       </div>
@@ -202,7 +204,7 @@ const Settings = ({ onBack, onLogout }) => {
     <div className="sub-view-container">
       <div className="sub-view-header">
         <button className="icon-btn-ghost" onClick={handleBack}><ChevronLeft size={24} /></button>
-        <h2>Plan History</h2>
+        <h2>{t('planHistory')}</h2>
         <div style={{ width: '40px' }}></div>
       </div>
       <div className="sub-view-content">
@@ -237,24 +239,50 @@ const Settings = ({ onBack, onLogout }) => {
     <div className="sub-view-container">
       <div className="sub-view-header">
         <button className="icon-btn-ghost" onClick={handleBack}><ChevronLeft size={24} /></button>
-        <h2>Account Visibility</h2>
+        <h2>{t('accountVisibility')}</h2>
         <div style={{ width: '40px' }}></div>
       </div>
       <div className="sub-view-content">
         <div className="settings-section">
           <div className="settings-item radio-row" onClick={() => setVisibility('public')}>
             <div className="settings-item-text">
-              <h4>Public</h4>
-              <p>Everyone can see your plans in the Discover feed</p>
+              <h4>{t('public')}</h4>
+              <p>{t('publicDesc')}</p>
             </div>
             <div className={`radio-circle ${visibility === 'public' ? 'active' : ''}`}></div>
           </div>
           <div className="settings-item radio-row" onClick={() => setVisibility('private')}>
             <div className="settings-item-text">
-              <h4>Private</h4>
-              <p>Only your matches can see your plans</p>
+              <h4>{t('private')}</h4>
+              <p>{t('privateDesc')}</p>
             </div>
             <div className={`radio-circle ${visibility === 'private' ? 'active' : ''}`}></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderLanguageView = () => (
+    <div className="sub-view-container">
+      <div className="sub-view-header">
+        <button className="icon-btn-ghost" onClick={handleBack}><ChevronLeft size={24} /></button>
+        <h2>{t('language')}</h2>
+        <div style={{ width: '40px' }}></div>
+      </div>
+      <div className="sub-view-content">
+        <div className="settings-section">
+          <div className="settings-item radio-row" onClick={() => changeLanguage('ca')}>
+            <div className="settings-item-text"><h4>Català</h4></div>
+            <div className={`radio-circle ${language === 'ca' ? 'active' : ''}`}></div>
+          </div>
+          <div className="settings-item radio-row" onClick={() => changeLanguage('es')}>
+            <div className="settings-item-text"><h4>Castellano</h4></div>
+            <div className={`radio-circle ${language === 'es' ? 'active' : ''}`}></div>
+          </div>
+          <div className="settings-item radio-row" onClick={() => changeLanguage('en')}>
+            <div className="settings-item-text"><h4>English</h4></div>
+            <div className={`radio-circle ${language === 'en' ? 'active' : ''}`}></div>
           </div>
         </div>
       </div>
@@ -272,6 +300,7 @@ const Settings = ({ onBack, onLogout }) => {
       case 'blocked': return renderBlockedView();
       case 'history': return renderHistoryView();
       case 'visibility': return renderVisibilityView();
+      case 'lang': return renderLanguageView();
       default: break;
     }
   }
@@ -284,14 +313,25 @@ const Settings = ({ onBack, onLogout }) => {
 
       <div className="settings-content">
         <div className="settings-section">
-          <h3 className="section-label">ACCOUNT</h3>
+          <h3 className="section-label">{t('account')}</h3>
           
+          <div className="settings-item" onClick={() => setActiveSubView('lang')}>
+            <div className="settings-item-icon">
+              <Globe size={20} color="var(--color-turquoise)" />
+            </div>
+            <div className="settings-item-text">
+              <h4>{t('language')}</h4>
+              <p>{language === 'ca' ? 'Català' : language === 'es' ? 'Castellano' : 'English'}</p>
+            </div>
+            <ChevronLeft size={20} className="chevron-right" />
+          </div>
+
           <div className="settings-item" onClick={() => setActiveSubView('phone')}>
             <div className="settings-item-icon">
               <span style={{ fontSize: '18px' }}>📞</span>
             </div>
             <div className="settings-item-text">
-              <h4>Phone Number</h4>
+              <h4>{t('phoneNumber')}</h4>
               <p>{phoneInput}</p>
             </div>
             <ChevronLeft size={20} className="chevron-right" />
@@ -302,7 +342,7 @@ const Settings = ({ onBack, onLogout }) => {
               <Lock size={20} color="var(--color-turquoise)" />
             </div>
             <div className="settings-item-text">
-              <h4>Privacy</h4>
+              <h4>{t('privacy')}</h4>
             </div>
             <ChevronLeft size={20} className="chevron-right" />
           </div>
@@ -312,7 +352,7 @@ const Settings = ({ onBack, onLogout }) => {
               <Shield size={20} color="var(--color-turquoise)" />
             </div>
             <div className="settings-item-text">
-              <h4>Safety Center</h4>
+              <h4>{t('safetyCenter')}</h4>
             </div>
             <ChevronLeft size={20} className="chevron-right" />
           </div>
@@ -322,7 +362,7 @@ const Settings = ({ onBack, onLogout }) => {
               <Link size={20} color="var(--color-turquoise)" />
             </div>
             <div className="settings-item-text">
-              <h4>Linked Accounts</h4>
+              <h4>{t('linkedAccounts')}</h4>
               <p>Instagram</p>
             </div>
             <ChevronLeft size={20} className="chevron-right" />
@@ -333,21 +373,21 @@ const Settings = ({ onBack, onLogout }) => {
               <Star size={20} color="var(--color-turquoise)" />
             </div>
             <div className="settings-item-text">
-              <h4>Favorite Matches</h4>
+              <h4>{t('favoriteMatches')}</h4>
             </div>
             <ChevronLeft size={20} className="chevron-right" />
           </div>
         </div>
 
         <div className="settings-section">
-          <h3 className="section-label">SAFETY & ACTIVITY</h3>
+          <h3 className="section-label">{t('safetyActivity')}</h3>
           
           <div className="settings-item" onClick={() => setActiveSubView('blocked')}>
             <div className="settings-item-icon">
               <Ban size={20} color="var(--color-red)" />
             </div>
             <div className="settings-item-text">
-              <h4>Blocked Accounts</h4>
+              <h4>{t('blockedAccounts')}</h4>
             </div>
             <ChevronLeft size={20} className="chevron-right" />
           </div>
@@ -357,7 +397,7 @@ const Settings = ({ onBack, onLogout }) => {
               <History size={20} color="var(--color-turquoise)" />
             </div>
             <div className="settings-item-text">
-              <h4>Plan History</h4>
+              <h4>{t('planHistory')}</h4>
             </div>
             <ChevronLeft size={20} className="chevron-right" />
           </div>
@@ -367,7 +407,7 @@ const Settings = ({ onBack, onLogout }) => {
               <Eye size={20} color="var(--color-turquoise)" />
             </div>
             <div className="settings-item-text">
-              <h4>Account Visibility</h4>
+              <h4>{t('accountVisibility')}</h4>
             </div>
             <ChevronLeft size={20} className="chevron-right" />
           </div>
@@ -375,7 +415,7 @@ const Settings = ({ onBack, onLogout }) => {
 
         <div className="settings-actions">
           <button className="logout-btn" onClick={() => setActiveSubView('logout')}>
-            <LogOut size={20} /> Log Out
+            <LogOut size={20} /> {t('logOut')}
           </button>
         </div>
       </div>

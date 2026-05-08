@@ -41,8 +41,9 @@ body {
   position: relative;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 0 50px rgba(0,0,0,0.5); /* Just for desktop preview distinction */
-  overflow: hidden; /* Keeps the frame clean */
+  border-radius: 40px;
+  overflow: hidden;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.6), 0 0 0 10px rgba(255,255,255,0.05);
 }
 
 /* Common App Container */
@@ -62,6 +63,9 @@ body {
   position: relative;
   background-color: var(--color-gray-50);
   
+  /* Global transition for content changes */
+  animation: fadeContent 0.3s ease-out;
+
   /* Hide scrollbar for Chrome, Safari and Opera */
   &::-webkit-scrollbar {
     display: none;
@@ -69,4 +73,38 @@ body {
   /* Hide scrollbar for IE, Edge and Firefox */
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
+}
+
+@keyframes fadeContent {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fadeContent 0.3s ease-out forwards;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Shared "See translation / Show original" link button ── */
+.translate-toggle-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--color-turquoise);
+  font-size: 13px;
+  font-family: var(--font-family);
+  font-weight: 500;
+  cursor: pointer;
+  letter-spacing: 0.01em;
+  transition: opacity 0.15s ease;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.translate-toggle-btn:hover {
+  opacity: 0.75;
+}
+.translate-toggle-btn:active {
+  opacity: 0.55;
 }

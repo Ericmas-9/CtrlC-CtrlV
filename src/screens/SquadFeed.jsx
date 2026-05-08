@@ -1,21 +1,95 @@
 import React, { useState } from 'react';
 import './SquadFeed.css';
-import { X, Heart, Info, Star, Users, MapPin, Calendar, RefreshCw } from 'lucide-react';
+import { X, Heart, Info, Users, MapPin, Calendar, RefreshCw, List, Map } from 'lucide-react';
+import { useLanguage } from '../i18n/LanguageContext';
+import { useUserLocation } from '../contexts/UserLocationContext';
+import { getDistance } from '../utils/distance';
+import MapView from '../components/MapView';
 
 const SquadFeed = ({ squads, onLike, onInfo }) => {
+  const { t } = useLanguage();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [swipeDirection, setSwipeDirection] = useState(null);
+  const [viewMode, setViewMode] = useState('list'); // 'list' | 'map'
+  const { userLocation } = useUserLocation();
 
-  // If we run out of squads
+  const handlePass = () => {
+    setSwipeDirection('left');
+    setTimeout(() => {
+      setCurrentIndex(prev => prev + 1);
+      setSwipeDirection(null);
+    }, 300);
+  };
+
+  const handleLike = () => {
+    onLike(squads[currentIndex]);
+    setCurrentIndex(prev => prev + 1);
+  };
+
+  // ── Shared view toggle pill ──
+  const ViewToggle = () => (
+    <div className="view-toggle-pill">
+      <button
+        className={`toggle-btn ${viewMode === 'list' ? 'toggle-active' : ''}`}
+        onClick={() => setViewMode('list')}
+      >
+        <List size={15} /> {t('listView')}
+      </button>
+      <button
+        className={`toggle-btn ${viewMode === 'map' ? 'toggle-active' : ''}`}
+        onClick={() => setViewMode('map')}
+      >
+        <Map size={15} /> {t('mapView')}
+      </button>
+    </div>
+  );
+
+  // ── MAP VIEW ──
+  if (viewMode === 'map') {
+    return (
+      <div key="map-view" className="squad-feed fade-in" style={{ padding: 0 }}>
+        <div className="feed-header" style={{ padding: '12px 16px' }}>
+          <p>{squads.length} {t('squadsNear')} <strong>Santa Monica</strong></p>
+          <ViewToggle />
+        </div>
+        <div style={{ width: '100%', height: '480px' }}>
+          <MapView
+            squads={squads}
+            onViewDetails={onInfo}
+            labels={{
+              members: t('members'),
+              viewDetails: t('viewDetails'),
+              // Pre-resolve all squad title keys so MapView never needs t()
+              squadTitles: Object.fromEntries(
+                squads
+                  .filter(s => s.titleKey)
+                  .map(s => [s.titleKey, t(s.titleKey)])
+              ),
+            }}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // ── LIST / SWIPE VIEW ──
   if (currentIndex >= squads.length) {
     return (
-      <div className="squad-feed empty-feed">
+      <div key="empty-view" className="squad-feed empty-feed fade-in">
+        <div className="feed-header">
+          <p>0 {t('squadsNear')} <strong>Santa Monica</strong></p>
+          <ViewToggle />
+        </div>
         <div className="empty-state-content">
           <Heart size={56} color="var(--color-gray-300)" style={{ marginBottom: '24px' }} />
-          <h3>You're all caught up!</h3>
-          <p>You've seen all the squads near Santa Monica.</p>
-          <button className="btn-primary" onClick={() => setCurrentIndex(0)} style={{ marginTop: '32px', width: 'auto', padding: '16px 32px' }}>
-            <RefreshCw size={18} /> Shuffle & Restart
+          <h3>{t('youAreCaughtUp')}</h3>
+          <p>{t('seenAllSquads')}</p>
+          <button
+            className="btn-primary"
+            onClick={() => setCurrentIndex(0)}
+            style={{ marginTop: '32px', width: 'auto', padding: '16px 32px' }}
+          >
+            <RefreshCw size={18} /> {t('shuffleRestart')}
           </button>
         </div>
       </div>
@@ -24,58 +98,54 @@ const SquadFeed = ({ squads, onLike, onInfo }) => {
 
   const currentSquad = squads[currentIndex];
 
-  const handlePass = () => {
-    setSwipeDirection('left');
-    setTimeout(() => {
-      setCurrentIndex(prev => prev + 1);
-      setSwipeDirection(null);
-    }, 300); // Wait for animation to finish
-  };
+  let displayDistance = currentSquad.distanceValue || '0';
+  let distanceUnit = t('miles');
 
-  const handleLike = () => {
-    onLike(currentSquad);
-    setCurrentIndex(prev => prev + 1);
-  };
+  if (userLocation && currentSquad.lat && currentSquad.lng) {
+    const distKm = getDistance(userLocation.lat, userLocation.lng, currentSquad.lat, currentSquad.lng);
+    displayDistance = distKm.toFixed(1);
+    distanceUnit = 'km';
+  }
 
   return (
-    <div className="squad-feed">
+    <div key="list-view" className="squad-feed fade-in">
       <div className="feed-header">
-        <p>{squads.length - currentIndex} squads near <strong>Santa Monica</strong></p>
+        <p>{squads.length - currentIndex} {t('squadsNear')} <strong>Santa Monica</strong></p>
+        <ViewToggle />
       </div>
 
       <div className="card-stack">
         <div className={`squad-card ${swipeDirection === 'left' ? 'swipe-out-left' : ''}`}>
           <div className="card-image-section" style={{ backgroundImage: `url(${currentSquad.image})` }}>
             <div className="card-badges">
-              <span className="badge"><Users size={14} /> {currentSquad.membersCount} members</span>
-              <span className="badge"><MapPin size={14} /> {currentSquad.distance}</span>
+              <span className="badge"><Users size={14} /> {currentSquad.membersCount} {t('members')}</span>
+              <span className="badge"><MapPin size={14} /> {displayDistance} {distanceUnit}</span>
             </div>
-            
             <div className="card-image-content">
               <div className="squad-info-main">
                 <h2 className="squad-name">{currentSquad.squadName}</h2>
-                <p className="squad-meta">{currentSquad.meta}</p>
+                <p className="squad-meta">{currentSquad.metaKey ? t(currentSquad.metaKey) : currentSquad.meta}</p>
               </div>
               <div className="leader-avatar">
                 <img src={currentSquad.leaderAvatar} alt="Leader" />
-                <div className="star-badge"><Star size={10} fill="white" color="var(--color-amber)" /></div>
               </div>
             </div>
           </div>
 
           <div className="card-details-section">
-            <h3 className="plan-title"><Calendar size={16} /> {currentSquad.planTitle}</h3>
+            <h3 className="plan-title">
+              <Calendar size={16} />
+              {currentSquad.titleKey ? t(currentSquad.titleKey) : currentSquad.planTitle}
+            </h3>
             <p className="plan-location"><MapPin size={14} /> {currentSquad.location}</p>
-            
-            <div className="tags-container">
+            <div className="tags-container" style={{ marginTop: '8px' }}>
               {currentSquad.tags.map(tag => (
-                <span key={tag} className="tag tag-turquoise">{tag}</span>
+                <span key={tag} className="tag tag-turquoise">{t(tag)}</span>
               ))}
             </div>
           </div>
         </div>
-        
-        {/* Visual stack effect behind main card */}
+
         {currentIndex + 1 < squads.length && <div className="card-shadow-1"></div>}
         {currentIndex + 2 < squads.length && <div className="card-shadow-2"></div>}
       </div>
@@ -84,7 +154,6 @@ const SquadFeed = ({ squads, onLike, onInfo }) => {
         <button className="action-btn btn-pass" onClick={handlePass}><X size={32} color="var(--color-red)" /></button>
         <button className="action-btn btn-info" onClick={() => onInfo(currentSquad)}><Info size={24} color="var(--color-amber)" /></button>
         <button className="action-btn btn-like" onClick={handleLike}><Heart size={36} fill="white" color="white" /></button>
-        <button className="action-btn btn-star"><Star size={24} color="#a855f7" /></button>
       </div>
     </div>
   );

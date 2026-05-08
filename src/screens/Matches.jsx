@@ -1,17 +1,19 @@
 import React from 'react';
 import { MessageSquare, Calendar, Users } from 'lucide-react';
+import { useLanguage } from '../i18n/LanguageContext';
 import './Matches.css';
 
 const Matches = ({ matches, onOpenChat }) => {
+  const { t } = useLanguage();
   return (
     <div className="matches-screen">
       <div className="matches-section">
-        <h3 className="section-label">ACTIVE SQUADCHATS ({matches.length})</h3>
+        <h3 className="section-label">{t('activeSquadChats', { count: matches.length })}</h3>
         
         {matches.length === 0 ? (
           <div className="empty-state">
             <MessageSquare size={48} color="var(--color-gray-300)" />
-            <p>No active chats yet. Go to Discover and start swiping!</p>
+            <p>{t('noActiveChats')}</p>
           </div>
         ) : (
           <div className="matches-list">
@@ -32,7 +34,7 @@ const Matches = ({ matches, onOpenChat }) => {
                       <span className="match-time">{match.lastActive}</span>
                     </div>
                     <p className="match-latest-msg">
-                      {isUs ? 'You: ' : ''}{latestMsg.text}
+                      {isUs ? t('you') : ''}{latestMsg.text}
                     </p>
                     <div className="match-meta">
                       <span className="meta-badge"><Calendar size={12}/> {match.squad.location}</span>
@@ -46,9 +48,9 @@ const Matches = ({ matches, onOpenChat }) => {
       </div>
 
       <div className="matches-section" style={{ marginTop: '24px' }}>
-        <h3 className="section-label">PENDING REQUESTS</h3>
+        <h3 className="section-label">{t('pendingRequests')}</h3>
         <div className="empty-state">
-           <p>No pending requests.</p>
+           <p>{t('noPendingRequests')}</p>
         </div>
       </div>
     </div>

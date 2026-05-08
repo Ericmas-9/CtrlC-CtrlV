@@ -25,14 +25,49 @@
 }
 
 .feed-header {
-  text-align: center;
-  margin: 10px 0 20px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 10px 0 16px 0;
   color: var(--color-gray-500);
   font-size: 14px;
 }
 
 .feed-header strong {
   color: var(--color-turquoise);
+}
+
+/* ── List / Map toggle pill ── */
+.view-toggle-pill {
+  display: flex;
+  align-items: center;
+  background: var(--color-gray-100);
+  border-radius: 20px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 17px;
+  background: transparent;
+  color: var(--color-gray-500);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font-family);
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+  white-space: nowrap;
+}
+
+.toggle-btn.toggle-active {
+  background: var(--color-turquoise);
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 210, 200, 0.35);
 }
 
 .card-stack {

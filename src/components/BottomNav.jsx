@@ -1,47 +1,43 @@
 import React from 'react';
-import { Flame, Plus, Zap, User } from 'lucide-react';
+import { Compass, PlusCircle, MessageSquare, User } from 'lucide-react';
+import { useLanguage } from '../i18n/LanguageContext';
 import './BottomNav.css';
 
 const BottomNav = ({ currentTab, setCurrentTab }) => {
-  const tabs = [
-    { id: 'discover', label: 'Discover', icon: Flame },
-    { id: 'create', label: 'Create', icon: Plus, isPrimary: true },
-    { id: 'matches', label: 'Matches', icon: Zap },
-    { id: 'profile', label: 'Profile', icon: User },
-  ];
-
+  const { t } = useLanguage();
+  
   return (
     <div className="bottom-nav">
-      {tabs.map((tab) => {
-        const Icon = tab.icon;
-        const isActive = currentTab === tab.id;
-        
-        if (tab.isPrimary) {
-          return (
-            <button
-              key={tab.id}
-              className={`nav-item primary-nav-item`}
-              onClick={() => setCurrentTab(tab.id)}
-            >
-              <div className="primary-nav-icon-wrapper">
-                <Icon size={28} color="white" />
-              </div>
-              <span className={`nav-label ${isActive ? 'active-label' : ''}`}>{tab.label}</span>
-            </button>
-          )
-        }
+      <button 
+        className={`nav-item ${currentTab === 'discover' ? 'active' : ''}`}
+        onClick={() => setCurrentTab('discover')}
+      >
+        <Compass size={24} className="nav-icon" />
+        <span className={`nav-label ${currentTab === 'discover' ? 'active-label' : ''}`}>{t('discover')}</span>
+      </button>
 
-        return (
-          <button
-            key={tab.id}
-            className={`nav-item ${isActive ? 'active' : ''}`}
-            onClick={() => setCurrentTab(tab.id)}
-          >
-            <Icon size={24} className="nav-icon" />
-            <span className="nav-label">{tab.label}</span>
-          </button>
-        );
-      })}
+      <button className="nav-item primary-nav-item" onClick={() => setCurrentTab('create')}>
+        <div className="primary-nav-icon-wrapper">
+          <PlusCircle size={28} color="white" strokeWidth={2.5} className="nav-icon" />
+        </div>
+        <span className={`nav-label ${currentTab === 'create' ? 'active-label' : ''}`}>{t('create')}</span>
+      </button>
+
+      <button 
+        className={`nav-item ${currentTab === 'matches' ? 'active' : ''}`}
+        onClick={() => setCurrentTab('matches')}
+      >
+        <MessageSquare size={24} className="nav-icon" />
+        <span className={`nav-label ${currentTab === 'matches' ? 'active-label' : ''}`}>{t('matches')}</span>
+      </button>
+
+      <button 
+        className={`nav-item ${currentTab === 'profile' ? 'active' : ''}`}
+        onClick={() => setCurrentTab('profile')}
+      >
+        <User size={24} className="nav-icon" />
+        <span className={`nav-label ${currentTab === 'profile' ? 'active-label' : ''}`}>{t('profile')}</span>
+      </button>
     </div>
   );
 };

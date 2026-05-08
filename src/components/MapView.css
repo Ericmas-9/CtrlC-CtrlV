@@ -1,0 +1,218 @@
+/* ── MapView wrapper ── */
+.map-wrapper {
+  width: 100%;
+  height: 100%;
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ── Custom turquoise pin (used as Leaflet DivIcon) ── */
+.map-squad-pin {
+  width: 28px;
+  height: 28px;
+  background: #00D2C8;
+  border: 3px solid #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 3px 12px rgba(0, 210, 200, 0.55);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+.map-squad-pin:hover {
+  transform: scale(1.2);
+}
+
+
+.leaflet-map {
+  width: 100%;
+  height: 100%;
+  min-height: 500px;
+  z-index: 1;
+}
+
+/* ── Popup styling ── */
+/* Reset Leaflet's default white bubble to our design system */
+.squad-popup .leaflet-popup-content-wrapper {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  padding: 0;
+  overflow: hidden;
+  min-width: 220px;
+}
+
+.squad-popup .leaflet-popup-content {
+  margin: 0;
+  width: auto !important;
+}
+
+.squad-popup .leaflet-popup-tip {
+  background: #ffffff;
+}
+
+.popup-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 14px 16px 12px;
+  gap: 10px;
+}
+
+.popup-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2.5px solid #00D2C8;
+}
+
+.popup-body {
+  width: 100%;
+  text-align: center;
+  font-family: 'Poppins', sans-serif;
+}
+
+.popup-squad-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 2px;
+  letter-spacing: 0.01em;
+}
+
+.popup-plan-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: #475569;
+  margin: 0 0 6px;
+  line-height: 1.4;
+}
+
+.popup-meta {
+  font-size: 11px;
+  color: #94a3b8;
+  margin: 0 0 12px;
+}
+
+.popup-details-btn {
+  display: block;
+  width: 100%;
+  padding: 9px 0;
+  background: linear-gradient(135deg, #00D2C8, #00b0a7);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Poppins', sans-serif;
+  cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+  letter-spacing: 0.02em;
+}
+
+.popup-details-btn:hover {
+  opacity: 0.9;
+}
+
+.popup-details-btn:active {
+  transform: scale(0.97);
+}
+
+/* ── CircleMarker pulse ring (CSS-only animation) ── */
+/* Leaflet circle markers don't support CSS animation directly,
+   but we style the SVG path fill for consistency */
+.leaflet-interactive {
+  transition: r 0.15s ease;
+}
+
+/* ── Locate Me Button ── */
+.locate-me-btn {
+  position: absolute;
+  bottom: 24px;
+  right: 16px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: white;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--color-gray-700);
+  cursor: pointer;
+  z-index: 1000; /* above leaflet map */
+  transition: transform 0.2s, color 0.2s;
+}
+
+.locate-me-btn:active {
+  transform: scale(0.95);
+}
+
+.locate-me-btn.loading {
+  color: var(--color-turquoise);
+}
+
+.spinning {
+  animation: spin 1.5s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ── Map Toast ── */
+.map-toast {
+  position: absolute;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(17, 24, 39, 0.85);
+  color: white;
+  padding: 10px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  z-index: 1000;
+  pointer-events: none;
+  animation: fadeInOut 3s ease forwards;
+  text-align: center;
+  max-width: 80%;
+  backdrop-filter: blur(4px);
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translate(-50%, -10px); }
+  15% { opacity: 1; transform: translate(-50%, 0); }
+  85% { opacity: 1; transform: translate(-50%, 0); }
+  100% { opacity: 0; transform: translate(-50%, -10px); }
+}
+
+/* ── User Blue Dot ── */
+.user-location-dot {
+  width: 14px;
+  height: 14px;
+  background-color: #3b82f6; /* Blue */
+  border: 2px solid white;
+  border-radius: 50%;
+  box-shadow: 0 0 6px rgba(59, 130, 246, 0.6);
+  position: relative;
+}
+
+.user-location-dot::after {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  width: 30px;
+  height: 30px;
+  background-color: rgba(59, 130, 246, 0.25);
+  border-radius: 50%;
+  animation: pulseBlueDot 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes pulseBlueDot {
+  0% { transform: scale(0.5); opacity: 1; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
