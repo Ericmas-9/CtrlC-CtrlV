@@ -13,13 +13,32 @@ import PlanDetailsModal from './components/PlanDetailsModal';
 import Settings from './screens/Settings';
 import StatusBar from './components/StatusBar';
 import { useLanguage } from './i18n/LanguageContext';
+import Login from './screens/Login';
+import Register from './screens/Register';
+import { supabase } from './utils/supabaseClient';
 
 function App() {
   const { t } = useLanguage();
+  const [session, setSession] = useState(null);
+  const [authView, setAuthView] = useState('login');
   const [currentTab, setCurrentTab] = useState('discover');
   const [showMatchOverlay, setShowMatchOverlay] = useState(false);
   const [activeChatId, setActiveChatId] = useState(null);
   const [selectedPlanDetails, setSelectedPlanDetails] = useState(null); 
+
+  React.useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   // --- GLOBAL STATE ---
   const myPhoto = "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=800&q=80";
@@ -250,7 +269,8 @@ function App() {
       case 'settings':
         return <Settings 
           onBack={() => setCurrentTab('discover')} 
-          onLogout={() => {
+          onLogout={async () => {
+            await supabase.auth.signOut();
             setCurrentTab('discover');
             setNotifications([]);
             setMatches([]);
@@ -283,6 +303,21 @@ function App() {
   const activeChatData = matches.find(m => m.id === activeChatId);
   const hideTopBar = activeChatId || currentTab === 'settings' || currentTab === 'notifications';
   const hideBottomNav = activeChatId;
+
+  if (!session) {
+    return (
+      <div className="app-container" style={{ backgroundColor: '#ffffff' }}>
+        <StatusBar />
+        <main className="main-content-area" style={{ backgroundColor: '#ffffff' }}>
+          {authView === 'login' ? (
+            <Login onNavigateToRegister={() => setAuthView('register')} />
+          ) : (
+            <Register onNavigateToLogin={() => setAuthView('login')} />
+          )}
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="app-container">

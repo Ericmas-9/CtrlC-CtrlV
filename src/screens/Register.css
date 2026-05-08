@@ -1,0 +1,72 @@
+/* Uses .auth-container, .auth-header, .auth-title, etc from Login.css */
+
+.auth-top-nav {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 24px;
+}
+
+.back-btn {
+  background: none;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1a1a2e;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.back-btn:hover {
+  background-color: #f8fafc;
+}
+
+.left-align {
+  align-items: flex-start;
+  margin-top: 0;
+  margin-bottom: 32px;
+}
+
+.left-align .auth-title {
+  text-align: left;
+}
+
+.left-align .auth-subtitle {
+  text-align: left;
+}
+
+.terms-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+  margin-bottom: 12px;
+}
+
+.terms-checkbox input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  accent-color: #2A4DB5;
+  cursor: pointer;
+}
+
+.terms-checkbox label {
+  font-size: 14px;
+  color: #7a829a;
+  cursor: pointer;
+}
+
+.terms-checkbox label a {
+  color: #2A4DB5;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.terms-checkbox label a:hover {
+  text-decoration: underline;
+}
