@@ -118,10 +118,11 @@ const CreatePlan = ({ onCreate, userProfile }) => {
       squadName: `${userProfile.name}'s Squad`,
       meta: `Ages ${minAge}-${maxAge} · Just created`,
       planTitle: title,
-      // Save location string and coordinates
       location: locationObj.address || 'Santa Monica, CA',
       lat: locationObj.lat,
       lng: locationObj.lng,
+      minAge: parseInt(minAge),
+      maxAge: parseInt(maxAge),
       distance: '0.0 mi',
       membersCount: 1, 
       image: 'https://images.unsplash.com/photo-1523301343968-6a6ebf63c672?auto=format&fit=crop&w=500&q=80', 

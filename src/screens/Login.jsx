@@ -26,24 +26,18 @@ function Login({ onNavigateToRegister }) {
     setLoading(false);
   };
 
-  const handleGoogleLogin = async () => {
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-    });
-  };
-
   const handleForgotPassword = async () => {
-    if (!email) {
-      alert("Please enter your email first to recover the password.");
-      return;
-    }
-    const { error } = await supabase.auth.resetPasswordForEmail(email);
+    const emailToRecover = window.prompt("Please enter your email address to recover your password:", email);
+    if (!emailToRecover) return;
+    
+    const { error } = await supabase.auth.resetPasswordForEmail(emailToRecover);
     if (error) {
       alert("Error: " + error.message);
     } else {
       alert("Password recovery email sent!");
     }
   };
+
 
   return (
     <div className="auth-container">
@@ -100,18 +94,6 @@ function Login({ onNavigateToRegister }) {
         </button>
       </form>
 
-      <div className="divider">
-        <span>OR</span>
-      </div>
-
-      <button type="button" className="google-btn" onClick={handleGoogleLogin}>
-        <img 
-          src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" 
-          alt="Google logo" 
-          className="google-icon"
-        />
-        Continue with Google
-      </button>
 
       <div className="auth-footer">
         <p>Don't have an account? <button type="button" className="link-btn" onClick={onNavigateToRegister}>Sign Up</button></p>

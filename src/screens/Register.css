@@ -70,3 +70,57 @@
 .terms-checkbox label a:hover {
   text-decoration: underline;
 }
+
+.textarea-wrapper {
+  height: auto;
+  min-height: 52px;
+  padding: 8px 16px;
+  align-items: flex-start;
+}
+
+.textarea-wrapper textarea {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 15px;
+  color: #1a1a2e;
+  background: transparent;
+  width: 100%;
+  resize: vertical;
+  margin-top: 6px;
+  font-family: inherit;
+}
+
+.textarea-wrapper textarea::placeholder {
+  color: #94a3b8;
+}
+
+.tags-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.tag-chip {
+  background-color: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tag-chip:hover {
+  background-color: #e2e8f0;
+}
+
+.tag-chip.selected {
+  background-color: #2A4DB5;
+  color: #ffffff;
+  border-color: #2A4DB5;
+  box-shadow: 0 2px 8px rgba(42, 77, 181, 0.3);
+}

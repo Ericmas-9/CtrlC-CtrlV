@@ -3,10 +3,10 @@ import { ChevronLeft, Lock, Shield, Link, Star, Ban, History, Eye, LogOut, Exter
 import { useLanguage } from '../i18n/LanguageContext';
 import './Settings.css';
 
-const Settings = ({ onBack, onLogout }) => {
+const Settings = ({ userProfile, onBack, onLogout }) => {
   const { t, language, changeLanguage } = useLanguage();
-  const [activeSubView, setActiveSubView] = useState(null); // 'phone', 'privacy', 'safety', 'linked', 'favorites', 'blocked', 'history', 'visibility', 'logout', 'lang'
-  const [phoneInput, setPhoneInput] = useState('+1 (555) 123-4567');
+  const [activeSubView, setActiveSubView] = useState(null); 
+  const [phoneInput, setPhoneInput] = useState(userProfile.phone || '');
   const [visibility, setVisibility] = useState('public');
 
   const handleBack = () => setActiveSubView(null);
