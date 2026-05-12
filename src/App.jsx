@@ -89,11 +89,14 @@ function App() {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
       setSession(session);
       if (session) {
         fetchUserProfile(session.user.id);
-        fetchPlans();
+        const fetchedSquads = await fetchPlans();
+        if (fetchedSquads) {
+          fetchJoinedPlans(session.user.id, fetchedSquads);
+        }
       }
       if (event === 'PASSWORD_RECOVERY') {
         setAuthView('update_password');
@@ -137,6 +140,36 @@ function App() {
     }));
 
     setSquads(mapped);
+    return mapped;
+  };
+
+  const fetchJoinedPlans = async (userId, allSquads) => {
+    const { data, error } = await supabase
+      .from('plan_members')
+      .select('plan_id')
+      .eq('user_id', userId);
+
+    if (error) {
+      console.error('Error fetching joined plans:', error);
+      return;
+    }
+
+    const joinedIds = new Set(data.map(d => d.plan_id));
+    setJoinedPlanIds(joinedIds);
+
+    // Rebuild the matches array from the joined plan IDs
+    const userMatches = data.map(d => {
+      const squad = allSquads.find(s => s.id === d.plan_id);
+      if (!squad) return null;
+      return {
+        id: `match-${squad.id}`,
+        squad: squad,
+        messages: [], // We will fetch messages directly in SquadChat now
+        lastActive: 'Active'
+      };
+    }).filter(Boolean);
+
+    setMatches(userMatches);
   };
 
   // --- GLOBAL STATE ---
@@ -163,17 +196,22 @@ function App() {
     };
     setNotifications(prev => [newNotif, ...prev]);
 
-    // BUG FIX: Always create the match entry, regardless of which button the user taps.
-    // Previously this only happened inside handleOpenChatFromMatch.
+    // BUG FIX: Always create the match entry locally so it's instant
     const newMatch = {
-      id: `match-${Date.now()}`,
+      id: `match-${squad.id}`,
       squad: squad,
-      messages: [
-        { id: 1, text: "Hey guys! We matched! Stoked for the plan.", sender: 'them', user: 'Mike', avatar: squad.leaderAvatar }
-      ],
+      messages: [],
       lastActive: t('justNow')
     };
     setMatches(prev => [newMatch, ...prev]);
+
+    // Save the join to Supabase
+    if (session?.user?.id) {
+      const { error } = await supabase
+        .from('plan_members')
+        .insert([{ plan_id: squad.id, user_id: session.user.id }]);
+      if (error) console.error('Error joining plan in DB:', error);
+    }
 
     // Increment members_count atomically in Supabase via server-side function.
     // Using rpc() with SECURITY DEFINER bypasses RLS restrictions that would block

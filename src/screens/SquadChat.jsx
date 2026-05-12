@@ -1,24 +1,119 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './SquadChat.css';
 import { Send, Image as ImageIcon, ChevronLeft, MoreVertical } from 'lucide-react';
+import { supabase } from '../utils/supabaseClient';
 
-const SquadChat = ({ matchData, userProfile, onBack, onUpdateMessages }) => {
+const SquadChat = ({ matchData, userProfile, onBack }) => {
   const [message, setMessage] = useState('');
+  const [messages, setMessages] = useState([]);
+
+  useEffect(() => {
+    const fetchMessages = async () => {
+      if (!matchData?.squad?.id) return;
+      const { data, error } = await supabase
+        .from('mensajes_chat')
+        .select(`
+          id,
+          text,
+          created_at,
+          sender_id,
+          perfiles_usuario (nombre, foto_perfil)
+        `)
+        .eq('plan_id', matchData.squad.id)
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching messages:', error);
+      } else if (data) {
+        const formatted = data.map(msg => ({
+          id: msg.id,
+          text: msg.text,
+          sender: msg.sender_id === userProfile.id ? 'us' : 'them',
+          user: msg.perfiles_usuario?.nombre || 'User',
+          avatar: msg.perfiles_usuario?.foto_perfil || 'https://via.placeholder.com/150'
+        }));
+        setMessages(formatted);
+      }
+    };
+
+    fetchMessages();
+
+    // Subscribe to real-time inserts
+    const channel = supabase
+      .channel(`chat_${matchData.squad.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'mensajes_chat',
+          filter: `plan_id=eq.${matchData.squad.id}`
+        },
+        async (payload) => {
+          // Fetch the user profile for the new message
+          const { data: userProfileData } = await supabase
+            .from('perfiles_usuario')
+            .select('nombre, foto_perfil')
+            .eq('id', payload.new.sender_id)
+            .single();
+
+          const newMsg = {
+            id: payload.new.id,
+            text: payload.new.text,
+            sender: payload.new.sender_id === userProfile.id ? 'us' : 'them',
+            user: userProfileData?.nombre || 'User',
+            avatar: userProfileData?.foto_perfil || 'https://via.placeholder.com/150'
+          };
+          
+          setMessages(prev => {
+            // Avoid duplicates if we already added it optimistically
+            if (prev.find(m => m.id === newMsg.id)) return prev;
+            return [...prev, newMsg];
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [matchData.squad.id, userProfile.id]);
   
-  const handleSend = (e) => {
+  const handleSend = async (e) => {
     e.preventDefault();
     if (!message.trim()) return;
 
+    const tempId = `temp-${Date.now()}`;
     const newMsg = {
-      id: Date.now(),
+      id: tempId,
       text: message,
       sender: 'us',
-      user: 'You', // Since it's you sending the message
+      user: userProfile.name || 'You',
       avatar: userProfile.photo
     };
 
-    onUpdateMessages([...matchData.messages, newMsg]);
+    // Optimistic update
+    setMessages(prev => [...prev, newMsg]);
     setMessage('');
+
+    const { error, data } = await supabase
+      .from('mensajes_chat')
+      .insert([{
+        plan_id: matchData.squad.id,
+        sender_id: userProfile.id,
+        text: newMsg.text
+      }])
+      .select('id')
+      .single();
+
+    if (error) {
+      console.error('Error sending message:', error);
+      // Revert optimistic update
+      setMessages(prev => prev.filter(m => m.id !== tempId));
+    } else {
+      // Replace temp ID with real DB ID
+      setMessages(prev => prev.map(m => m.id === tempId ? { ...m, id: data.id } : m));
+    }
   };
 
   return (
@@ -39,33 +134,40 @@ const SquadChat = ({ matchData, userProfile, onBack, onUpdateMessages }) => {
       <div className="chat-messages">
         <div className="chat-date-separator">Today</div>
         
-        {matchData.messages.map((msg, idx) => {
-          const isUs = msg.sender === 'us';
-          const showAvatar = idx === 0 || matchData.messages[idx-1].sender !== msg.sender;
-          
-          return (
-            <div key={msg.id} className={`message-row ${isUs ? 'message-us' : 'message-them'}`}>
-              {!isUs && (
-                <div className="message-avatar">
-                  {showAvatar && <img src={msg.avatar} alt={msg.user} />}
+        {messages.length === 0 ? (
+          <div className="empty-chat-state" style={{ textAlign: 'center', marginTop: '40px', color: 'var(--color-gray-400)' }}>
+            <p>No hay mensajes aún.</p>
+            <p>¡Sé el primero en saludar!</p>
+          </div>
+        ) : (
+          messages.map((msg, idx) => {
+            const isUs = msg.sender === 'us';
+            const showAvatar = idx === 0 || messages[idx-1].sender !== msg.sender;
+            
+            return (
+              <div key={msg.id} className={`message-row ${isUs ? 'message-us' : 'message-them'}`}>
+                {!isUs && (
+                  <div className="message-avatar">
+                    {showAvatar && <img src={msg.avatar} alt={msg.user} />}
+                  </div>
+                )}
+                
+                <div className="message-content">
+                  {showAvatar && <span className="message-sender-name">{msg.user}</span>}
+                  <div className={`message-bubble ${isUs ? 'bubble-us' : 'bubble-them'}`}>
+                    {msg.text}
+                  </div>
                 </div>
-              )}
-              
-              <div className="message-content">
-                {showAvatar && <span className="message-sender-name">{msg.user}</span>}
-                <div className={`message-bubble ${isUs ? 'bubble-us' : 'bubble-them'}`}>
-                  {msg.text}
-                </div>
+                
+                {isUs && (
+                  <div className="message-avatar">
+                    {showAvatar && <img src={msg.avatar} alt={msg.user} />}
+                  </div>
+                )}
               </div>
-              
-              {isUs && (
-                <div className="message-avatar">
-                  {showAvatar && <img src={msg.avatar} alt={msg.user} />}
-                </div>
-              )}
-            </div>
-          );
-        })}
+            );
+          })
+        )}
       </div>
 
       <form className="chat-input-area" onSubmit={handleSend}>
