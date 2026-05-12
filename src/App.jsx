@@ -145,10 +145,14 @@ function App() {
   const [squads, setSquads] = useState([]);
 
   const [matches, setMatches] = useState([]);
+  const [joinedPlanIds, setJoinedPlanIds] = useState(new Set()); // BUG FIX: track joined plan IDs
   const [notifications, setNotifications] = useState([]);
 
   // --- HANDLERS ---
-  const handleLike = (squad) => {
+  const handleLike = async (squad) => {
+    // BUG FIX: Mark plan as joined immediately so it never reappears in the feed
+    setJoinedPlanIds(prev => new Set([...prev, squad.id]));
+
     // Add Notification
     const newNotif = {
       id: Date.now().toString(),
@@ -157,13 +161,10 @@ function App() {
       time: t('justNow'),
       avatar: squad.leaderAvatar
     };
-    setNotifications([newNotif, ...notifications]);
+    setNotifications(prev => [newNotif, ...prev]);
 
-    // Simulate Match
-    setShowMatchOverlay(squad);
-  };
-
-  const handleOpenChatFromMatch = (squad) => {
+    // BUG FIX: Always create the match entry, regardless of which button the user taps.
+    // Previously this only happened inside handleOpenChatFromMatch.
     const newMatch = {
       id: `match-${Date.now()}`,
       squad: squad,
@@ -172,10 +173,21 @@ function App() {
       ],
       lastActive: t('justNow')
     };
-    setMatches([newMatch, ...matches]);
-    setShowMatchOverlay(false);
-    setActiveChatId(newMatch.id);
-    // Increment plansJoined counter locally and persist to Supabase
+    setMatches(prev => [newMatch, ...prev]);
+
+    // Increment members_count atomically in Supabase via server-side function.
+    // Using rpc() with SECURITY DEFINER bypasses RLS restrictions that would block
+    // non-creator users from updating a plan row directly.
+    if (squad.id) {
+      const { error: rpcError } = await supabase.rpc('increment_members_count', { plan_id: squad.id });
+      if (rpcError) {
+        console.error('Error incrementing members_count via rpc:', rpcError);
+      } else {
+        await fetchPlans(); // Refresh so "Mis Planes" shows the updated count
+      }
+    }
+
+    // Increment plansJoined counter on the user profile
     setUserProfile(prev => {
       const updated = { ...prev, plansJoined: (prev.plansJoined ?? 0) + 1 };
       if (prev.id) {
@@ -188,20 +200,16 @@ function App() {
       return updated;
     });
 
-    // 3. Increment members_count for the PLAN in Supabase
-    if (squad.id) {
-      supabase
-        .from('planes')
-        .update({ members_count: (squad.membersCount || 0) + 1 })
-        .eq('id', squad.id)
-        .then(async ({ error }) => {
-          if (error) console.error('Error incrementing members_count:', error);
-          else {
-            // Refresh plans list to reflect the new member count
-            await fetchPlans();
-          }
-        });
-    }
+    // Show the SquadMatch overlay
+    setShowMatchOverlay({ squad, matchId: newMatch.id });
+  };
+
+  const handleOpenChatFromMatch = (matchData) => {
+    // BUG FIX: matchData now carries the matchId so we open the right chat.
+    // The match was already added in handleLike, so we just navigate to it.
+    const matchId = matchData.matchId || matches[0]?.id;
+    setShowMatchOverlay(false);
+    setActiveChatId(matchId);
   };
 
   const handleCreatePlan = async (newPlan) => {
@@ -303,6 +311,8 @@ function App() {
         const filteredSquads = squads.filter(s => {
           // Don't show the user's own plans
           if (s.creatorId === userProfile.id) return false;
+          // BUG FIX: Don't show plans the user has already joined
+          if (joinedPlanIds.has(s.id)) return false;
           // Don't show full plans
           if (s.maxMembers && s.membersCount >= s.maxMembers) return false;
           // Don't show plans outside the user's age range
@@ -431,16 +441,18 @@ function App() {
       )}
 
       {/* Match Overlay (Full Screen Modal) */}
-      {showMatchOverlay && (
-        <MatchOverlay 
-          squad={showMatchOverlay}
-          onClose={() => setShowMatchOverlay(false)} 
-          onOpenChat={() => handleOpenChatFromMatch(showMatchOverlay)}
-          image1={showMatchOverlay.image}
-          image2={userProfile.photo}
-        />
-      )}
-
+      {showMatchOverlay && (() => {
+        const overlaySquad = showMatchOverlay.squad || showMatchOverlay;
+        return (
+          <MatchOverlay 
+            squad={overlaySquad}
+            onClose={() => setShowMatchOverlay(false)} 
+            onOpenChat={() => handleOpenChatFromMatch(showMatchOverlay)}
+            image1={overlaySquad.image}
+            image2={userProfile.photo}
+          />
+        );
+      })()}
       {/* Info Modal (Overlay) */}
       {selectedPlanDetails && (() => {
         const isCreator = selectedPlanDetails.creatorId === userProfile.id;
