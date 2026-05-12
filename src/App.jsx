@@ -28,6 +28,7 @@ function App() {
   const [selectedPlanDetails, setSelectedPlanDetails] = useState(null); 
 
   const [userProfile, setUserProfile] = useState(null);
+  const [profileLoadError, setProfileLoadError] = useState(false);
   const [usersInCity, setUsersInCity] = useState(0);
 
   const fetchUsersInCity = async (city) => {
@@ -40,43 +41,43 @@ function App() {
   };
 
   const fetchUserProfile = async (userId, retryCount = 0) => {
-    const { data, error } = await supabase
-      .from('perfiles_usuario')
-      .select('*')
-      .eq('id', userId)
-      .single();
+    if (retryCount === 0) setProfileLoadError(false);
     
-    if (error && retryCount < 3) {
-      // It might take a moment for the profile to be created after signup
-      setTimeout(() => fetchUserProfile(userId, retryCount + 1), 1000);
-      return;
-    }
+    try {
+      const { data, error } = await supabase
+        .from('perfiles_usuario')
+        .select('*')
+        .eq('id', userId)
+        .single();
+      
+      if (error && retryCount < 3) {
+        setTimeout(() => fetchUserProfile(userId, retryCount + 1), 1000);
+        return;
+      }
 
-    if (data && !error) {
-      setUserProfile({
-        id: data.id,
-        name: data.full_name || 'User',
-        age: data.age || '',
-        city: data.city || '',
-        bio: data.bio || '',
-        photo: data.photo_url || null,
-        plansHosted: data.plans_hosted ?? 0,
-        plansJoined: data.plans_joined ?? 0,
-        rating: data.rating ?? 0
-      });
-      if (data.city) fetchUsersInCity(data.city);
-    } else {
-      // Fallback profile if there is a persistent error
-      setUserProfile({
-        name: 'User',
-        age: '',
-        city: '',
-        bio: '',
-        photo: null,
-        plansHosted: 0,
-        plansJoined: 0,
-        rating: 0
-      });
+      if (data && !error) {
+        setUserProfile({
+          id: data.id,
+          name: data.full_name || 'User',
+          age: data.age || '',
+          city: data.city || '',
+          bio: data.bio || '',
+          photo: data.photo_url || null,
+          plansHosted: data.plans_hosted ?? 0,
+          plansJoined: data.plans_joined ?? 0,
+          rating: data.rating ?? 0
+        });
+        if (data.city) fetchUsersInCity(data.city);
+      } else {
+        setProfileLoadError(true);
+      }
+    } catch (err) {
+      console.error('Error fetching profile:', err);
+      if (retryCount < 3) {
+        setTimeout(() => fetchUserProfile(userId, retryCount + 1), 1000);
+      } else {
+        setProfileLoadError(true);
+      }
     }
   };
 
@@ -445,8 +446,16 @@ function App() {
 
   if (!userProfile) {
     return (
-      <div className="app-container" style={{ backgroundColor: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <p>Loading profile...</p>
+      <div className="app-container" style={{ backgroundColor: '#ffffff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '20px', padding: '20px' }}>
+        {profileLoadError ? (
+          <>
+            <p style={{ color: 'var(--color-gray-500)', textAlign: 'center' }}>{t('errorLoadingProfile', 'Hubo un problema al cargar tu perfil.')}</p>
+            <button className="btn-primary" onClick={() => fetchUserProfile(session?.user?.id)}>Reintentar</button>
+            <button className="btn-secondary" onClick={() => supabase.auth.signOut()}>Cerrar Sesión</button>
+          </>
+        ) : (
+          <p>Loading profile...</p>
+        )}
       </div>
     );
   }
