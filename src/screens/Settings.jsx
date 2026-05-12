@@ -6,31 +6,12 @@ import './Settings.css';
 const Settings = ({ userProfile, onBack, onLogout }) => {
   const { t, language, changeLanguage } = useLanguage();
   const [activeSubView, setActiveSubView] = useState(null); 
-  const [phoneInput, setPhoneInput] = useState(userProfile.phone || '');
   const [visibility, setVisibility] = useState('public');
 
   const handleBack = () => setActiveSubView(null);
 
   // --- SUB-VIEWS ---
 
-  const renderPhoneModal = () => (
-    <div className="settings-modal-overlay">
-      <div className="settings-modal">
-        <h3>{t('updatePhone')}</h3>
-        <p>{t('phoneDesc')}</p>
-        <input 
-          type="text" 
-          className="settings-input" 
-          value={phoneInput} 
-          onChange={(e) => setPhoneInput(e.target.value)} 
-        />
-        <div className="modal-actions">
-          <button className="btn-cancel" onClick={handleBack}>{t('cancel')}</button>
-          <button className="btn-save" onClick={handleBack}>{t('save')}</button>
-        </div>
-      </div>
-    </div>
-  );
 
   const renderLogoutModal = () => (
     <div className="settings-modal-overlay">
@@ -291,7 +272,7 @@ const Settings = ({ userProfile, onBack, onLogout }) => {
 
   // --- MAIN RENDER ---
   
-  if (activeSubView && activeSubView !== 'phone' && activeSubView !== 'logout') {
+  if (activeSubView && activeSubView !== 'logout') {
     switch (activeSubView) {
       case 'privacy': return renderPrivacyView();
       case 'safety': return renderSafetyView();
@@ -326,16 +307,6 @@ const Settings = ({ userProfile, onBack, onLogout }) => {
             <ChevronLeft size={20} className="chevron-right" />
           </div>
 
-          <div className="settings-item" onClick={() => setActiveSubView('phone')}>
-            <div className="settings-item-icon">
-              <span style={{ fontSize: '18px' }}>📞</span>
-            </div>
-            <div className="settings-item-text">
-              <h4>{t('phoneNumber')}</h4>
-              <p>{phoneInput}</p>
-            </div>
-            <ChevronLeft size={20} className="chevron-right" />
-          </div>
 
           <div className="settings-item" onClick={() => setActiveSubView('privacy')}>
             <div className="settings-item-icon">
@@ -420,7 +391,6 @@ const Settings = ({ userProfile, onBack, onLogout }) => {
         </div>
       </div>
 
-      {activeSubView === 'phone' && renderPhoneModal()}
       {activeSubView === 'logout' && renderLogoutModal()}
 
     </div>

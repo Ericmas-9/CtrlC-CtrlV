@@ -135,3 +135,183 @@
   gap: 4px;
   font-weight: 600;
 }
+
+.my-plan-thumb {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background-size: cover;
+  background-position: center;
+  flex-shrink: 0;
+}
+
+/* My plan card (creator view) */
+.my-plan-card {
+  background-color: white;
+  border-radius: 20px;
+  padding: 16px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.my-plan-card:active {
+  transform: scale(0.98);
+}
+
+.my-plan-card-header {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+/* Settings / delete buttons on plan cards */
+.plan-settings-btn,
+.plan-delete-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+
+.plan-settings-btn {
+  color: var(--color-gray-500);
+}
+
+.plan-settings-btn:hover {
+  background: #f1f5f9;
+  color: var(--color-gray-800);
+}
+
+.plan-delete-btn {
+  color: #ef4444;
+}
+
+.plan-delete-btn:hover {
+  background: #fee2e2;
+}
+
+/* Settings Modal Overlay */
+.plan-settings-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 200;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.plan-settings-modal {
+  background: white;
+  border-radius: 24px 24px 0 0;
+  padding: 24px 24px 40px;
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: slideUp 0.25s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+.plan-settings-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.plan-settings-modal-header h4 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-gray-900);
+}
+
+.plan-settings-close {
+  background: #f1f5f9;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--color-gray-600);
+}
+
+.plan-settings-name {
+  font-size: 14px;
+  color: var(--color-gray-500);
+  margin: -8px 0 0;
+}
+
+.plan-settings-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.plan-settings-field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-gray-600);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.plan-settings-field input {
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 15px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.plan-settings-field input:focus {
+  border-color: var(--color-turquoise);
+}
+
+.plan-settings-hint {
+  font-size: 12px;
+  color: var(--color-gray-400);
+}
+
+.plan-settings-actions {
+  margin-top: 4px;
+}
+
+.plan-settings-save {
+  width: 100%;
+  padding: 14px;
+  border-radius: 14px;
+  border: none;
+  background: linear-gradient(135deg, var(--color-turquoise), #00a896);
+  color: white;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: opacity 0.2s;
+}
+
+.plan-settings-save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

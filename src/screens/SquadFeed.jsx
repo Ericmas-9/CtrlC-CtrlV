@@ -6,7 +6,7 @@ import { useUserLocation } from '../contexts/UserLocationContext';
 import { getDistance } from '../utils/distance';
 import MapView from '../components/MapView';
 
-const SquadFeed = ({ squads, onLike, onInfo }) => {
+const SquadFeed = ({ squads, onLike, onInfo, usersInCity = 0, userCity = '' }) => {
   const { t } = useLanguage();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [swipeDirection, setSwipeDirection] = useState(null);
@@ -49,7 +49,7 @@ const SquadFeed = ({ squads, onLike, onInfo }) => {
     return (
       <div key="map-view" className="squad-feed fade-in" style={{ padding: 0 }}>
         <div className="feed-header" style={{ padding: '12px 16px' }}>
-          <p>{squads.length} {t('squadsNear')} <strong>Santa Monica</strong></p>
+          <p>{usersInCity} {usersInCity === 1 ? 'usuario' : 'usuarios'} en <strong>{userCity}</strong></p>
           <ViewToggle />
         </div>
         <div style={{ width: '100%', height: '480px' }}>
@@ -77,7 +77,7 @@ const SquadFeed = ({ squads, onLike, onInfo }) => {
     return (
       <div key="empty-view" className="squad-feed empty-feed fade-in">
         <div className="feed-header">
-          <p>0 {t('squadsNear')} <strong>Santa Monica</strong></p>
+          <p>{usersInCity} {usersInCity === 1 ? 'usuario' : 'usuarios'} en <strong>{userCity}</strong></p>
           <ViewToggle />
         </div>
         <div className="empty-state-content">
@@ -110,7 +110,7 @@ const SquadFeed = ({ squads, onLike, onInfo }) => {
   return (
     <div key="list-view" className="squad-feed fade-in">
       <div className="feed-header">
-        <p>{squads.length - currentIndex} {t('squadsNear')} <strong>Santa Monica</strong></p>
+        <p>{usersInCity} {usersInCity === 1 ? 'usuario' : 'usuarios'} en <strong>{userCity}</strong></p>
         <ViewToggle />
       </div>
 
@@ -137,6 +137,11 @@ const SquadFeed = ({ squads, onLike, onInfo }) => {
               <Calendar size={16} />
               {currentSquad.titleKey ? t(currentSquad.titleKey) : currentSquad.planTitle}
             </h3>
+            {currentSquad.eventDate && (
+              <p className="plan-date">
+                📅 {new Date(currentSquad.eventDate).toLocaleString('es-ES', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+              </p>
+            )}
             <p className="plan-location"><MapPin size={14} /> {currentSquad.location}</p>
             <div className="tags-container" style={{ marginTop: '8px' }}>
               {currentSquad.tags.map(tag => (

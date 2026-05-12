@@ -27,6 +27,7 @@ const CreatePlan = ({ onCreate, userProfile }) => {
   const [showMapModal, setShowMapModal] = useState(false);
 
   const [selectedTags, setSelectedTags] = useState([]);
+  const [eventDate, setEventDate] = useState('');
 
   const availableTags = ['Sports ⚽', 'Drinking 🍺', 'Music 🎵', 'Outdoors 🌲', 'Chill ☕', 'Beach 🌊', 'Hiking 🥾', 'Padel 🎾', 'Gaming 🎮'];
 
@@ -113,6 +114,13 @@ const CreatePlan = ({ onCreate, userProfile }) => {
     e.preventDefault();
     if (!title) return;
 
+    // Validate that creator's age is within the plan's age range
+    const creatorAge = parseInt(userProfile.age);
+    if (creatorAge && (creatorAge < parseInt(minAge) || creatorAge > parseInt(maxAge))) {
+      alert(`Tu edad (${creatorAge}) debe estar dentro del rango de edad del plan (${minAge}-${maxAge}).`);
+      return;
+    }
+
     const newSquad = {
       id: `squad-${Date.now()}`,
       squadName: `${userProfile.name}'s Squad`,
@@ -123,12 +131,14 @@ const CreatePlan = ({ onCreate, userProfile }) => {
       lng: locationObj.lng,
       minAge: parseInt(minAge),
       maxAge: parseInt(maxAge),
+      maxGroupSize: parseInt(maxGroupSize),
       distance: '0.0 mi',
       membersCount: 1, 
       image: 'https://images.unsplash.com/photo-1523301343968-6a6ebf63c672?auto=format&fit=crop&w=500&q=80', 
       leaderAvatar: userProfile.photo,
       tags: selectedTags.map(t => t.split(' ')[0]), 
-      description: description || 'Looking to form a squad for this plan!'
+      description: description || 'Looking to form a squad for this plan!',
+      eventDate: eventDate || null
     };
 
     onCreate(newSquad);
@@ -142,6 +152,7 @@ const CreatePlan = ({ onCreate, userProfile }) => {
     setAddressInput('');
     setLocationObj({ address: '', lat: null, lng: null });
     setSelectedTags([]);
+    setEventDate('');
   };
 
   return (
@@ -177,6 +188,17 @@ const CreatePlan = ({ onCreate, userProfile }) => {
               onChange={(e) => setDescription(e.target.value)}
               rows="3"
             ></textarea>
+          </div>
+
+          <div className="input-group">
+            <label>Fecha y hora del evento</label>
+            <input 
+              type="datetime-local"
+              value={eventDate}
+              onChange={(e) => setEventDate(e.target.value)}
+              required
+              style={{ fontSize: '15px', padding: '12px 16px', borderRadius: '12px', border: '1.5px solid #e2e8f0', width: '100%', fontFamily: 'inherit' }}
+            />
           </div>
 
           <div className="input-group">

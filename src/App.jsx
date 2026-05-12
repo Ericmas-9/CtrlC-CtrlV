@@ -28,6 +28,16 @@ function App() {
   const [selectedPlanDetails, setSelectedPlanDetails] = useState(null); 
 
   const [userProfile, setUserProfile] = useState(null);
+  const [usersInCity, setUsersInCity] = useState(0);
+
+  const fetchUsersInCity = async (city) => {
+    if (!city) return;
+    const { count, error } = await supabase
+      .from('perfiles_usuario')
+      .select('id', { count: 'exact', head: true })
+      .ilike('city', city);
+    if (!error) setUsersInCity(count || 0);
+  };
 
   const fetchUserProfile = async (userId, retryCount = 0) => {
     const { data, error } = await supabase
@@ -48,20 +58,19 @@ function App() {
         name: data.full_name || 'User',
         age: data.age || '',
         city: data.city || '',
-        phone: data.phone || '',
         bio: data.bio || '',
         photo: data.photo_url || null,
         plansHosted: data.plans_hosted ?? 0,
         plansJoined: data.plans_joined ?? 0,
         rating: data.rating ?? 0
       });
+      if (data.city) fetchUsersInCity(data.city);
     } else {
       // Fallback profile if there is a persistent error
       setUserProfile({
         name: 'User',
         age: '',
         city: '',
-        phone: '',
         bio: '',
         photo: null,
         plansHosted: 0,
@@ -72,12 +81,10 @@ function App() {
   };
 
   React.useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session) {
-        fetchUserProfile(session.user.id);
-        fetchPlans();
-      }
+    // Always sign out on app start so the user sees the login screen
+    supabase.auth.signOut().then(() => {
+      setSession(null);
+      setUserProfile(null);
     });
 
     const {
@@ -110,6 +117,7 @@ function App() {
     // Map DB columns to the local squad object shape
     const mapped = data.map(p => ({
       id: p.id,
+      creatorId: p.creator_id,
       squadName: p.squad_name,
       planTitle: p.plan_title,
       description: p.description,
@@ -120,9 +128,11 @@ function App() {
       maxAge: p.max_age,
       meta: `Ages ${p.min_age}-${p.max_age}`,
       membersCount: p.members_count,
+      maxMembers: p.max_members,
       tags: p.tags || [],
       image: p.image || 'https://images.unsplash.com/photo-1523301343968-6a6ebf63c672?auto=format&fit=crop&w=500&q=80',
       leaderAvatar: p.leader_avatar,
+      eventDate: p.event_date,
       distanceValue: null
     }));
 
@@ -177,6 +187,21 @@ function App() {
       }
       return updated;
     });
+
+    // 3. Increment members_count for the PLAN in Supabase
+    if (squad.id) {
+      supabase
+        .from('planes')
+        .update({ members_count: (squad.membersCount || 0) + 1 })
+        .eq('id', squad.id)
+        .then(async ({ error }) => {
+          if (error) console.error('Error incrementing members_count:', error);
+          else {
+            // Refresh plans list to reflect the new member count
+            await fetchPlans();
+          }
+        });
+    }
   };
 
   const handleCreatePlan = async (newPlan) => {
@@ -193,10 +218,12 @@ function App() {
         lng: newPlan.lng,
         min_age: newPlan.minAge || 18,
         max_age: newPlan.maxAge || 99,
+        max_members: newPlan.maxGroupSize,
         members_count: 1,
         tags: newPlan.tags,
         image: newPlan.image,
-        leader_avatar: newPlan.leaderAvatar
+        leader_avatar: newPlan.leaderAvatar,
+        event_date: newPlan.eventDate || null
       }])
       .select()
       .single();
@@ -237,15 +264,77 @@ function App() {
     setSelectedPlanDetails(squad);
   };
 
+  const handleUpdatePlan = async (planId, updates) => {
+    const dbUpdates = {};
+    if (updates.eventDate !== undefined) dbUpdates.event_date = updates.eventDate;
+    if (updates.maxMembers !== undefined) dbUpdates.max_members = updates.maxMembers;
+
+    const { error } = await supabase
+      .from('planes')
+      .update(dbUpdates)
+      .eq('id', planId);
+
+    if (error) {
+      console.error('Error updating plan:', error);
+      alert('Error al actualizar el plan: ' + error.message);
+      return;
+    }
+    await fetchPlans();
+  };
+
+  const handleDeletePlan = async (planId) => {
+    const { error } = await supabase
+      .from('planes')
+      .delete()
+      .eq('id', planId);
+
+    if (error) {
+      console.error('Error deleting plan:', error);
+      alert('Error al eliminar el plan: ' + error.message);
+      return;
+    }
+    await fetchPlans();
+  };
+
   // --- RENDER LOGIC ---
   const renderScreen = () => {
     switch (currentTab) {
       case 'discover':
-        return <SquadFeed squads={squads} onLike={handleLike} onInfo={handleOpenInfo} />;
+        const filteredSquads = squads.filter(s => {
+          // Don't show the user's own plans
+          if (s.creatorId === userProfile.id) return false;
+          // Don't show full plans
+          if (s.maxMembers && s.membersCount >= s.maxMembers) return false;
+          // Don't show plans outside the user's age range
+          const userAge = parseInt(userProfile.age);
+          if (userAge && s.minAge && s.maxAge) {
+            if (userAge < s.minAge || userAge > s.maxAge) return false;
+          }
+          return true;
+        });
+        return <SquadFeed 
+          squads={filteredSquads} 
+          onLike={handleLike} 
+          onInfo={handleOpenInfo}
+          usersInCity={usersInCity}
+          userCity={userProfile.city}
+        />;
       case 'create':
         return <CreatePlan onCreate={handleCreatePlan} userProfile={userProfile} />;
       case 'matches':
-        return <Matches matches={matches} onOpenChat={(id) => setActiveChatId(id)} />;
+        const userPlans = squads.filter(s => {
+          if (s.creatorId !== userProfile.id) return false;
+          if (!s.eventDate) return true;
+          return new Date(s.eventDate) > new Date();
+        });
+        return <Matches 
+          matches={matches} 
+          onOpenChat={(id) => setActiveChatId(id)} 
+          userPlans={userPlans} 
+          onInfo={handleOpenInfo}
+          onUpdatePlan={handleUpdatePlan}
+          onDeletePlan={handleDeletePlan}
+        />;
       case 'profile':
         return <Profile userProfile={userProfile} setUserProfile={setUserProfile} />;
       case 'notifications':
@@ -353,16 +442,41 @@ function App() {
       )}
 
       {/* Info Modal (Overlay) */}
-      {selectedPlanDetails && (
-        <PlanDetailsModal 
-          squad={selectedPlanDetails} 
-          onClose={() => setSelectedPlanDetails(null)}
-          onJoin={() => {
-            handleLike(selectedPlanDetails);
-            setSelectedPlanDetails(null);
-          }}
-        />
-      )}
+      {selectedPlanDetails && (() => {
+        const isCreator = selectedPlanDetails.creatorId === userProfile.id;
+        const joinedMatch = matches.find(m => m.squad.id === selectedPlanDetails.id);
+        const isJoined = isCreator || !!joinedMatch;
+        // If it's the creator's plan, we just use the plan's id as the chat id
+        const matchIdToOpen = joinedMatch ? joinedMatch.id : `chat-${selectedPlanDetails.id}`;
+
+        return (
+          <PlanDetailsModal 
+            squad={selectedPlanDetails} 
+            onClose={() => setSelectedPlanDetails(null)}
+            onJoin={() => {
+              handleLike(selectedPlanDetails);
+              setSelectedPlanDetails(null);
+            }}
+            isJoined={isJoined}
+            onOpenChat={() => {
+              setSelectedPlanDetails(null);
+              // For creator plans without a match object yet, we simulate one
+              if (!joinedMatch && isCreator) {
+                const newCreatorMatch = {
+                  id: matchIdToOpen,
+                  squad: selectedPlanDetails,
+                  messages: [{ id: 1, text: "Bienvenido a tu Squad Chat!", sender: 'us', user: userProfile.name, avatar: userProfile.photo }],
+                  lastActive: 'Ahora'
+                };
+                if (!matches.find(m => m.id === matchIdToOpen)) {
+                  setMatches([newCreatorMatch, ...matches]);
+                }
+              }
+              setActiveChatId(matchIdToOpen);
+            }}
+          />
+        );
+      })()}
 
       {/* Active Chat Screen (Full Screen Overlay) */}
       {activeChatId && activeChatData && (

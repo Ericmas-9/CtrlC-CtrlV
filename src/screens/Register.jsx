@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { ArrowLeft, User, Mail, Lock, EyeOff, Eye, MapPin, Phone, Calendar, FileText } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ArrowLeft, User, Mail, Lock, EyeOff, Eye, MapPin, Calendar, FileText } from 'lucide-react';
 import { supabase } from '../utils/supabaseClient';
 import './Register.css';
 
@@ -10,12 +10,49 @@ function Register({ onNavigateToLogin }) {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [age, setAge] = useState('');
   const [city, setCity] = useState('');
-  const [phone, setPhone] = useState('');
   const [bio, setBio] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // City autocomplete
+  const [cityInput, setCityInput] = useState('');
+  const [citySuggestions, setCitySuggestions] = useState([]);
+  const [showCitySuggestions, setShowCitySuggestions] = useState(false);
+  const [cityIsValid, setCityIsValid] = useState(false);
+
+  useEffect(() => {
+    const delay = setTimeout(async () => {
+      if (cityInput.length > 2 && !cityIsValid) {
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(cityInput)}&format=json&addressdetails=1&limit=6&featuretype=city`
+          );
+          const data = await res.json();
+          const cityTypes = ['city', 'town', 'village', 'municipality', 'administrative', 'suburb', 'borough', 'quarter'];
+          const filtered = data.filter(r => cityTypes.includes(r.type) || cityTypes.includes(r.class));
+          setCitySuggestions(filtered);
+          setShowCitySuggestions(filtered.length > 0);
+        } catch (e) {
+          console.error('Nominatim error:', e);
+        }
+      } else {
+        setCitySuggestions([]);
+        setShowCitySuggestions(false);
+      }
+    }, 400);
+    return () => clearTimeout(delay);
+  }, [cityInput, cityIsValid]);
+
+  const handleSelectCity = (suggestion) => {
+    const addr = suggestion.address;
+    const name = addr.city || addr.town || addr.village || addr.municipality || addr.suburb || suggestion.display_name.split(',')[0];
+    setCityInput(name);
+    setCity(name);
+    setCityIsValid(true);
+    setShowCitySuggestions(false);
+  };
 
 
   const handleRegister = async (e) => {
@@ -54,7 +91,6 @@ function Register({ onNavigateToLogin }) {
             email: email,
             age: age ? parseInt(age) : null,
             city: city,
-            phone: phone,
             bio: bio
           }
         ]);
@@ -126,32 +162,39 @@ function Register({ onNavigateToLogin }) {
           </div>
         </div>
 
-        <div className="input-group">
+        <div className="input-group" style={{ position: 'relative' }}>
           <label>City</label>
           <div className="input-wrapper">
             <MapPin className="input-icon" size={20} />
             <input 
               type="text" 
               placeholder="e.g. Barcelona" 
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
+              value={cityInput}
+              onChange={(e) => {
+                setCityInput(e.target.value);
+                setCity(e.target.value);
+                setCityIsValid(false);
+              }}
+              onBlur={() => setTimeout(() => setShowCitySuggestions(false), 200)}
               required
+              autoComplete="off"
             />
           </div>
-        </div>
-
-        <div className="input-group">
-          <label>Phone Number</label>
-          <div className="input-wrapper">
-            <Phone className="input-icon" size={20} />
-            <input 
-              type="tel" 
-              placeholder="+34 600 00 00 00" 
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              required
-            />
-          </div>
+          {showCitySuggestions && (
+            <ul className="city-suggestions-dropdown">
+              {citySuggestions.map((s, idx) => {
+                const addr = s.address;
+                const name = addr.city || addr.town || addr.village || addr.municipality || addr.suburb || s.display_name.split(',')[0];
+                const country = addr.country || '';
+                return (
+                  <li key={idx} className="city-suggestion-item" onMouseDown={() => handleSelectCity(s)}>
+                    <MapPin size={13} style={{ marginRight: '8px', flexShrink: 0, color: '#94a3b8' }} />
+                    <span>{name}<span style={{ color: '#94a3b8', fontSize: '13px' }}>, {country}</span></span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </div>
 
         <div className="input-group">

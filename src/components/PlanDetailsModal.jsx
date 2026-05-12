@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { X, Calendar, MapPin, Users, HeartHandshake } from 'lucide-react';
+import { X, Calendar, MapPin, Users, HeartHandshake, MessageSquare } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
 import { useUserLocation } from '../contexts/UserLocationContext';
 import { getDistance } from '../utils/distance';
@@ -8,7 +8,7 @@ import 'leaflet/dist/leaflet.css';
 import './PlanDetailsModal.css';
 
 // Removed SQUAD_COORDS from here since it's now inside squad data
-const PlanDetailsModal = ({ squad, onClose, onJoin }) => {
+const PlanDetailsModal = ({ squad, onClose, onJoin, isJoined, onOpenChat }) => {
   const { t } = useLanguage();
   const { userLocation } = useUserLocation();
   const mapContainerRef = useRef(null);
@@ -89,6 +89,17 @@ const PlanDetailsModal = ({ squad, onClose, onJoin }) => {
             {squad.titleKey ? t(squad.titleKey) : squad.planTitle}
           </h3>
 
+          {isJoined && (
+            <button
+              className="btn-primary"
+              onClick={onOpenChat}
+              style={{ width: '100%', padding: '14px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', marginBottom: '16px' }}
+            >
+              <MessageSquare size={20} />
+              Abrir Chat
+            </button>
+          )}
+
           <div className="modal-badges">
             <span className="badge"><Calendar size={14} /> {t('today')}</span>
             <span className="badge"><MapPin size={14} /> {squad.location}</span>
@@ -111,16 +122,18 @@ const PlanDetailsModal = ({ squad, onClose, onJoin }) => {
             ))}
           </div>
 
-          <div className="modal-actions" style={{ marginTop: '24px' }}>
-            <button
-              className="btn-primary"
-              onClick={onJoin}
-              style={{ width: '100%', padding: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
-            >
-              <HeartHandshake size={20} />
-              {t('joinSquad')}
-            </button>
-          </div>
+          {!isJoined && (
+            <div className="modal-actions" style={{ marginTop: '24px' }}>
+              <button
+                className="btn-primary"
+                onClick={onJoin}
+                style={{ width: '100%', padding: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
+              >
+                <HeartHandshake size={20} />
+                {t('joinSquad')}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
