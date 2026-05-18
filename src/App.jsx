@@ -207,10 +207,14 @@ function App() {
     const joinedIds = new Set(data.map(d => d.plan_id));
     setJoinedPlanIds(joinedIds);
 
-    // Rebuild the matches array from the joined plan IDs
+    // Rebuild the matches array from the joined plan IDs.
+    // STRICT SEPARATION: exclude plans the user CREATED — those belong in
+    // "Mis Planes" (userPlans), NOT in "Otros Planes" (matches).
     const userMatches = data.map(d => {
       const squad = allSquads.find(s => s.id === d.plan_id);
       if (!squad) return null;
+      // Skip plans where this user is the creator
+      if (squad.creatorId === userId) return null;
       return {
         id: `match-${squad.id}`,
         squad: squad,
@@ -226,14 +230,16 @@ function App() {
 
 
   const [squads, setSquads] = useState([]);
-
   const [matches, setMatches] = useState([]);
-  const [joinedPlanIds, setJoinedPlanIds] = useState(new Set()); // BUG FIX: track joined plan IDs
+  const [joinedPlanIds, setJoinedPlanIds] = useState(new Set());
   const [notifications, setNotifications] = useState([]);
+  // feedKey forces SquadFeed to remount (resetting its internal currentIndex)
+  // every time the user hits Recargar, so new cards are visible immediately.
+  const [feedKey, setFeedKey] = useState(0);
 
   // --- HANDLERS ---
   const handleLike = async (squad) => {
-    // BUG FIX: Mark plan as joined immediately so it never reappears in the feed
+    // Mark plan as joined immediately so it never reappears in the feed
     setJoinedPlanIds(prev => new Set([...prev, squad.id]));
 
     // Add Notification
@@ -246,16 +252,20 @@ function App() {
     };
     setNotifications(prev => [newNotif, ...prev]);
 
-    // BUG FIX: Always create the match entry locally so it's instant
+    // Build the optimistic match entry.
+    // STRICT SEPARATION: never add a match for a plan the current user created —
+    // those live exclusively in "Mis Planes" (userPlans), not "Otros Planes" (matches).
     const newMatch = {
       id: `match-${squad.id}`,
       squad: squad,
       messages: [],
       lastActive: t('justNow')
     };
-    setMatches(prev => [newMatch, ...prev]);
+    if (squad.creatorId !== session?.user?.id) {
+      setMatches(prev => [newMatch, ...prev]);
+    }
 
-    // BUG FIX: Optimistically bump membersCount in local squads state so badge updates instantly
+    // Optimistically bump membersCount so badge updates instantly
     setSquads(prev => prev.map(s => s.id === squad.id ? { ...s, membersCount: (s.membersCount || 0) + 1 } : s));
 
     // Save the join to Supabase
@@ -266,15 +276,17 @@ function App() {
       if (error) console.error('Error joining plan in DB:', error);
     }
 
-    // Increment members_count atomically in Supabase via server-side function.
-    // Using rpc() with SECURITY DEFINER bypasses RLS restrictions that would block
-    // non-creator users from updating a plan row directly.
+    // Increment members_count atomically via RPC (SECURITY DEFINER bypasses RLS)
     if (squad.id) {
       const { error: rpcError } = await supabase.rpc('increment_members_count', { plan_id: squad.id });
       if (rpcError) {
         console.error('Error incrementing members_count via rpc:', rpcError);
       } else {
-        await fetchPlans(); // Refresh so "Mis Planes" shows the confirmed count
+        // Refresh plans AND joined-plans so both lists stay consistent
+        const refreshed = await fetchPlans();
+        if (refreshed && session?.user?.id) {
+          await fetchJoinedPlans(session.user.id, refreshed);
+        }
       }
     }
 
@@ -414,12 +426,23 @@ function App() {
           }
           return true;
         });
-        return <SquadFeed 
-          squads={filteredSquads} 
-          onLike={handleLike} 
+        return <SquadFeed
+          key={feedKey}
+          squads={filteredSquads}
+          onLike={handleLike}
           onInfo={handleOpenInfo}
           usersInCity={usersInCity}
           userCity={userProfile.city}
+          onReload={async () => {
+            // Increment feedKey so SquadFeed remounts completely,
+            // resetting its internal currentIndex to 0 and showing fresh cards.
+            setFeedKey(prev => prev + 1);
+            // Re-fetch ALL plans from Supabase so rows created by other users appear.
+            const refreshed = await fetchPlans();
+            if (refreshed && session?.user?.id) {
+              await fetchJoinedPlans(session.user.id, refreshed);
+            }
+          }}
         />;
       case 'create':
         return <CreatePlan onCreate={handleCreatePlan} userProfile={userProfile} />;
@@ -429,14 +452,19 @@ function App() {
           if (!s.eventDate) return true;
           return new Date(s.eventDate) > new Date();
         });
-        return <Matches 
-          matches={matches} 
+        // SAFETY NET: even if a stale match slipped into state,
+        // guarantee own plans never render in "Otros Planes".
+        const otherMatches = matches.filter(
+          m => m.squad?.creatorId !== userProfile.id
+        );
+        return <Matches
+          matches={otherMatches}
           onOpenChat={(id) => {
-            const found = matches.find(m => m.id === id);
+            const found = otherMatches.find(m => m.id === id);
             setActiveChatId(id);
             setActiveChatData(found);
-          }} 
-          userPlans={userPlans} 
+          }}
+          userPlans={userPlans}
           onInfo={handleOpenInfo}
           onUpdatePlan={handleUpdatePlan}
           onDeletePlan={handleDeletePlan}

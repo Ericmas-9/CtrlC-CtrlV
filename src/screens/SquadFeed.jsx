@@ -6,7 +6,7 @@ import { useUserLocation } from '../contexts/UserLocationContext';
 import { getDistance } from '../utils/distance';
 import MapView from '../components/MapView';
 
-const SquadFeed = ({ squads, onLike, onInfo, usersInCity = 0, userCity = '' }) => {
+const SquadFeed = ({ squads, onLike, onInfo, usersInCity = 0, userCity = '', onReload }) => {
   const { t } = useLanguage();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [swipeDirection, setSwipeDirection] = useState(null);
@@ -41,6 +41,16 @@ const SquadFeed = ({ squads, onLike, onInfo, usersInCity = 0, userCity = '' }) =
       >
         <Map size={15} /> {t('mapView')}
       </button>
+      {onReload && (
+        <button
+          className="toggle-btn"
+          title="Recargar planes"
+          onClick={async () => { await onReload?.(); setCurrentIndex(0); }}
+          style={{ gap: '4px' }}
+        >
+          <RefreshCw size={14} /> Recargar
+        </button>
+      )}
     </div>
   );
 
@@ -86,7 +96,11 @@ const SquadFeed = ({ squads, onLike, onInfo, usersInCity = 0, userCity = '' }) =
           <p>{t('seenAllSquads')}</p>
           <button
             className="btn-primary"
-            onClick={() => setCurrentIndex(0)}
+            onClick={async () => {
+              // Real reload: re-fetch from Supabase, then restart the card stack
+              await onReload?.();
+              setCurrentIndex(0);
+            }}
             style={{ marginTop: '32px', width: 'auto', padding: '16px 32px' }}
           >
             <RefreshCw size={18} /> {t('shuffleRestart')}
