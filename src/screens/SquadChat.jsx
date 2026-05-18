@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import './SquadChat.css';
-import { Send, Image as ImageIcon, ChevronLeft, MoreVertical } from 'lucide-react';
+import { Send, Image as ImageIcon, ChevronLeft, Users } from 'lucide-react';
 import { supabase } from '../utils/supabaseClient';
+import PublicProfileModal from '../components/PublicProfileModal';
+import PlanMembersPanel from '../components/PlanMembersPanel';
 
 const SquadChat = ({ matchData, userProfile, onBack }) => {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
+  const [profileUserId, setProfileUserId] = useState(null);
+  const [showMembers, setShowMembers] = useState(false);
 
   useEffect(() => {
     const fetchMessages = async () => {
@@ -44,6 +48,7 @@ const SquadChat = ({ matchData, userProfile, onBack }) => {
         return {
           id: msg.id,
           text: msg.text,
+          senderId: msg.sender_id,
           sender: msg.sender_id === userProfile.id ? 'us' : 'them',
           user: profile?.full_name || 'User',
           avatar: profile?.photo_url || 'https://via.placeholder.com/150'
@@ -76,6 +81,7 @@ const SquadChat = ({ matchData, userProfile, onBack }) => {
           const newMsg = {
             id: payload.new.id,
             text: payload.new.text,
+            senderId: payload.new.sender_id,
             sender: payload.new.sender_id === userProfile.id ? 'us' : 'them',
             user: senderProfile?.full_name || 'User',
             avatar: senderProfile?.photo_url || 'https://via.placeholder.com/150'
@@ -103,6 +109,7 @@ const SquadChat = ({ matchData, userProfile, onBack }) => {
     const newMsg = {
       id: tempId,
       text: message,
+      senderId: userProfile.id,
       sender: 'us',
       user: userProfile.name || 'You',
       avatar: userProfile.photo
@@ -132,6 +139,12 @@ const SquadChat = ({ matchData, userProfile, onBack }) => {
     }
   };
 
+  const handleAvatarClick = (msg) => {
+    // Don't open own profile
+    if (msg.sender === 'us') return;
+    setProfileUserId(msg.senderId);
+  };
+
   return (
     <div className="squad-chat">
       <div className="chat-header">
@@ -142,8 +155,12 @@ const SquadChat = ({ matchData, userProfile, onBack }) => {
           <h2 className="chat-title">{matchData.squad.squadName} + Your Squad</h2>
           <p className="chat-subtitle">{matchData.squad.membersCount + 1} members · Active now</p>
         </div>
-        <button className="icon-btn-ghost">
-          <MoreVertical size={20} />
+        <button
+          className="icon-btn-ghost view-members-btn"
+          onClick={() => setShowMembers(true)}
+          title="Ver miembros"
+        >
+          <Users size={20} />
         </button>
       </div>
 
@@ -164,12 +181,27 @@ const SquadChat = ({ matchData, userProfile, onBack }) => {
               <div key={msg.id} className={`message-row ${isUs ? 'message-us' : 'message-them'}`}>
                 {!isUs && (
                   <div className="message-avatar">
-                    {showAvatar && <img src={msg.avatar} alt={msg.user} />}
+                    {showAvatar && (
+                      <button
+                        className="clickable-avatar"
+                        onClick={() => handleAvatarClick(msg)}
+                        title={`Ver perfil de ${msg.user}`}
+                      >
+                        <img src={msg.avatar} alt={msg.user} />
+                      </button>
+                    )}
                   </div>
                 )}
                 
                 <div className="message-content">
-                  {showAvatar && <span className="message-sender-name">{msg.user}</span>}
+                  {showAvatar && (
+                    <button
+                      className="message-sender-name clickable-name"
+                      onClick={() => handleAvatarClick(msg)}
+                    >
+                      {msg.user}
+                    </button>
+                  )}
                   <div className={`message-bubble ${isUs ? 'bubble-us' : 'bubble-them'}`}>
                     {msg.text}
                   </div>
@@ -201,6 +233,23 @@ const SquadChat = ({ matchData, userProfile, onBack }) => {
           <Send size={18} />
         </button>
       </form>
+
+      {/* Public Profile Modal */}
+      {profileUserId && (
+        <PublicProfileModal
+          userId={profileUserId}
+          onClose={() => setProfileUserId(null)}
+        />
+      )}
+
+      {/* Plan Members Panel */}
+      {showMembers && (
+        <PlanMembersPanel
+          planId={matchData.squad.id}
+          creatorId={matchData.squad.creatorId}
+          onClose={() => setShowMembers(false)}
+        />
+      )}
     </div>
   );
 };

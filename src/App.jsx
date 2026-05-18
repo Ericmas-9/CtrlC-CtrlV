@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import './index.css';
 import TopBar from './components/TopBar';
 import BottomNav from './components/BottomNav';
@@ -29,7 +29,8 @@ function App() {
   const [selectedPlanDetails, setSelectedPlanDetails] = useState(null); 
 
   const [userProfile, setUserProfile] = useState(null);
-  const [profileLoadError, setProfileLoadError] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileLoadError, setProfileLoadError] = useState(null);
   const [usersInCity, setUsersInCity] = useState(0);
 
   const fetchUsersInCity = async (city) => {
@@ -41,17 +42,18 @@ function App() {
     if (!error) setUsersInCity(count || 0);
   };
 
-  const DEFAULT_GUEST_PROFILE = {
-    id: `guest-${Date.now()}`,
-    name: 'Guest User',
-    age: '',
-    city: '',
-    bio: '',
-    photo: null,
-    plansHosted: 0,
-    plansJoined: 0,
-    rating: 0
-  };
+  // Helper: map a perfiles_usuario row to our local profile shape
+  const mapProfileRow = (data, userId) => ({
+    id: data.id || userId,
+    name: data.full_name || 'User',
+    age: data.age || '',
+    city: data.city || '',
+    bio: data.bio || '',
+    photo: data.photo_url || null,
+    plansHosted: data.plans_hosted ?? 0,
+    plansJoined: data.plans_joined ?? 0,
+    rating: data.rating ?? 0
+  });
 
   const clearSupabaseStorage = () => {
     try {
@@ -66,56 +68,62 @@ function App() {
     }
   };
 
-  const fetchUserProfile = async (userId) => {
+  const fetchUserProfile = useCallback(async (userId, userEmail) => {
+    setProfileLoading(true);
+    setProfileLoadError(null);
+
     try {
+      // Step 1: Try to fetch the existing profile
       const { data, error } = await supabase
         .from('perfiles_usuario')
         .select('*')
         .eq('id', userId)
-        .single();
-      
+        .maybeSingle();  // returns null instead of error when no rows
+
       if (error) {
-        console.warn('Error fetching profile, using guest profile:', error);
-        setUserProfile({ ...DEFAULT_GUEST_PROFILE, id: userId });
-        return;
+        // Real Supabase error (network, RLS, etc.) — surface it
+        throw new Error(error.message || 'Error al cargar el perfil.');
       }
 
-      // Data Versioning check - ensure the expected fields exist (checking for 'nombre' as well)
-      if (data && ('full_name' in data || 'name' in data || 'nombre' in data)) {
-        setUserProfile({
-          id: data.id || userId,
-          name: data.full_name || data.name || data.nombre || 'User',
-          age: data.age || '',
-          city: data.city || '',
-          bio: data.bio || '',
-          photo: data.photo_url || data.foto_perfil || null,
-          plansHosted: data.plans_hosted ?? 0,
-          plansJoined: data.plans_joined ?? 0,
-          rating: data.rating ?? 0
-        });
+      if (data) {
+        // Existing profile found — use it
+        const profile = mapProfileRow(data, userId);
+        setUserProfile(profile);
         if (data.city) fetchUsersInCity(data.city);
       } else {
-        console.warn('Profile structure mismatch, clearing storage and using guest profile');
-        clearSupabaseStorage();
-        setUserProfile({ ...DEFAULT_GUEST_PROFILE, id: userId });
+        // No profile row exists → brand-new user. Auto-insert one.
+        console.info('No profile found for user, auto-creating...');
+        const newRow = {
+          id: userId,
+          full_name: userEmail?.split('@')[0] || 'Nuevo Usuario',
+          photo_url: null,
+          age: null,
+          city: '',
+          bio: '',
+          rating: 0,
+          plans_hosted: 0,
+          plans_joined: 0
+        };
+
+        const { data: inserted, error: insertError } = await supabase
+          .from('perfiles_usuario')
+          .insert([newRow])
+          .select()
+          .single();
+
+        if (insertError) {
+          throw new Error('No se pudo crear el perfil: ' + insertError.message);
+        }
+
+        setUserProfile(mapProfileRow(inserted, userId));
       }
     } catch (err) {
-      console.error('Exception in fetchUserProfile:', err);
-      setUserProfile({ ...DEFAULT_GUEST_PROFILE, id: userId });
+      console.error('fetchUserProfile failed:', err);
+      setProfileLoadError(err.message || 'Error desconocido al cargar el perfil.');
+    } finally {
+      setProfileLoading(false);
     }
-  };
-
-  // Safety Timeout Effect: Force load if stuck
-  React.useEffect(() => {
-    let safetyTimer;
-    if (session && !userProfile) {
-      safetyTimer = setTimeout(() => {
-        console.warn('Safety timeout triggered! Forcing default profile to unblock UI.');
-        setUserProfile({ ...DEFAULT_GUEST_PROFILE, id: session.user?.id || DEFAULT_GUEST_PROFILE.id });
-      }, 3000);
-    }
-    return () => clearTimeout(safetyTimer);
-  }, [session, userProfile]);
+  }, []);
 
   React.useEffect(() => {
     // Forcefully clear everything so the user MUST log in every time they enter the app
@@ -134,7 +142,7 @@ function App() {
       
       setSession(session);
       if (session) {
-        fetchUserProfile(session.user.id);
+        fetchUserProfile(session.user.id, session.user.email);
         const fetchedSquads = await fetchPlans();
         if (fetchedSquads) {
           fetchJoinedPlans(session.user.id, fetchedSquads);
@@ -446,6 +454,7 @@ function App() {
             // without waiting for the Supabase auth event to propagate.
             setSession(null);
             setUserProfile(null);
+            setProfileLoadError(null);
             setMatches([]);
             setJoinedPlanIds(new Set());
             setNotifications([]);
@@ -500,8 +509,91 @@ function App() {
 
   if (!userProfile) {
     return (
-      <div className="app-container" style={{ backgroundColor: '#ffffff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '20px', padding: '20px' }}>
-        <p>Loading profile...</p>
+      <div className="app-container" style={{ backgroundColor: '#ffffff' }}>
+        <StatusBar />
+        <main className="main-content-area" style={{
+          backgroundColor: '#ffffff',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '20px',
+          padding: '32px'
+        }}>
+          {profileLoadError ? (
+            // ── Error State with Retry ──
+            <div style={{
+              width: '100%',
+              maxWidth: '340px',
+              background: 'rgba(255,255,255,0.9)',
+              backdropFilter: 'blur(16px)',
+              borderRadius: '24px',
+              padding: '32px 24px',
+              textAlign: 'center',
+              boxShadow: '0 8px 40px rgba(0,0,0,0.08)',
+              border: '1px solid var(--color-gray-100)',
+              animation: 'fadeContent 0.3s ease-out'
+            }}>
+              <div style={{
+                width: '56px',
+                height: '56px',
+                borderRadius: '50%',
+                background: 'rgba(255,75,75,0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 16px',
+                fontSize: '24px'
+              }}>⚠️</div>
+              <h3 style={{
+                fontSize: '18px',
+                fontWeight: 700,
+                color: 'var(--color-gray-900)',
+                marginBottom: '8px'
+              }}>Error al cargar perfil</h3>
+              <p style={{
+                fontSize: '14px',
+                color: 'var(--color-gray-500)',
+                lineHeight: 1.5,
+                marginBottom: '24px'
+              }}>{profileLoadError}</p>
+              <button
+                className="btn-primary"
+                onClick={() => fetchUserProfile(session.user.id, session.user.email)}
+                style={{
+                  width: '100%',
+                  padding: '14px',
+                  borderRadius: '14px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px'
+                }}
+              >
+                🔄 Reintentar
+              </button>
+            </div>
+          ) : (
+            // ── Loading Spinner ──
+            <div style={{ textAlign: 'center' }}>
+              <div style={{
+                width: '48px',
+                height: '48px',
+                border: '4px solid var(--color-gray-200)',
+                borderTopColor: 'var(--color-turquoise)',
+                borderRadius: '50%',
+                animation: 'spin 0.8s linear infinite',
+                margin: '0 auto 16px'
+              }} />
+              <p style={{
+                fontSize: '15px',
+                fontWeight: 600,
+                color: 'var(--color-gray-500)'
+              }}>Cargando perfil…</p>
+              <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+            </div>
+          )}
+        </main>
       </div>
     );
   }

@@ -52,11 +52,13 @@ body {
   flex-direction: column;
   height: 100%;
   width: 100%;
+  overflow: hidden;
 }
 
 /* The scrollable area between TopBar and BottomNav */
 .main-content-area {
   flex: 1;
+  min-height: 0; /* critical: allows flex shrinking so bottom nav stays anchored */
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -82,7 +84,8 @@ body {
 
 .fade-in {
   animation: fadeContent 0.3s ease-out forwards;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
 }

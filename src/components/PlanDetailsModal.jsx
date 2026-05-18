@@ -1,10 +1,12 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X, Calendar, MapPin, Users, HeartHandshake, MessageSquare } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
 import { useUserLocation } from '../contexts/UserLocationContext';
 import { getDistance } from '../utils/distance';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import PublicProfileModal from './PublicProfileModal';
+import PlanMembersPanel from './PlanMembersPanel';
 import './PlanDetailsModal.css';
 
 // Removed SQUAD_COORDS from here since it's now inside squad data
@@ -13,6 +15,9 @@ const PlanDetailsModal = ({ squad, onClose, onJoin, isJoined, onOpenChat }) => {
   const { userLocation } = useUserLocation();
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
+
+  const [profileUserId, setProfileUserId] = useState(null);
+  const [showMembers, setShowMembers] = useState(false);
 
   const position = (squad.lat && squad.lng) ? [squad.lat, squad.lng] : null;
 
@@ -64,6 +69,12 @@ const PlanDetailsModal = ({ squad, onClose, onJoin, isJoined, onOpenChat }) => {
     };
   }, [squad, position]);
 
+  const handleCreatorClick = () => {
+    if (squad.creatorId) {
+      setProfileUserId(squad.creatorId);
+    }
+  };
+
   return (
     <div className="plan-details-overlay">
       <div className="plan-details-card">
@@ -77,9 +88,13 @@ const PlanDetailsModal = ({ squad, onClose, onJoin, isJoined, onOpenChat }) => {
 
         <div className="modal-content">
           <div className="modal-squad-info">
-            <img src={squad.leaderAvatar} alt="Leader" className="modal-leader-avatar" />
+            <button className="clickable-creator-avatar" onClick={handleCreatorClick} title="Ver perfil del creador">
+              <img src={squad.leaderAvatar} alt="Leader" className="modal-leader-avatar" />
+            </button>
             <div>
-              <h2 className="modal-squad-name">{squad.squadName}</h2>
+              <button className="clickable-creator-name" onClick={handleCreatorClick}>
+                <h2 className="modal-squad-name">{squad.squadName}</h2>
+              </button>
               <p className="modal-squad-meta">{squad.metaKey ? t(squad.metaKey) : squad.meta}</p>
             </div>
           </div>
@@ -93,10 +108,20 @@ const PlanDetailsModal = ({ squad, onClose, onJoin, isJoined, onOpenChat }) => {
             <button
               className="btn-primary"
               onClick={onOpenChat}
-              style={{ width: '100%', padding: '14px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', marginBottom: '16px' }}
+              style={{ width: '100%', padding: '14px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', marginBottom: '8px' }}
             >
               <MessageSquare size={20} />
               Abrir Chat
+            </button>
+          )}
+
+          {isJoined && (
+            <button
+              className="view-members-btn-plan"
+              onClick={() => setShowMembers(true)}
+            >
+              <Users size={16} />
+              Ver miembros
             </button>
           )}
 
@@ -136,6 +161,23 @@ const PlanDetailsModal = ({ squad, onClose, onJoin, isJoined, onOpenChat }) => {
           )}
         </div>
       </div>
+
+      {/* Public Profile Modal */}
+      {profileUserId && (
+        <PublicProfileModal
+          userId={profileUserId}
+          onClose={() => setProfileUserId(null)}
+        />
+      )}
+
+      {/* Plan Members Panel */}
+      {showMembers && (
+        <PlanMembersPanel
+          planId={squad.id}
+          creatorId={squad.creatorId}
+          onClose={() => setShowMembers(false)}
+        />
+      )}
     </div>
   );
 };
