@@ -40,9 +40,32 @@ function App() {
     if (!error) setUsersInCity(count || 0);
   };
 
-  const fetchUserProfile = async (userId, retryCount = 0) => {
-    if (retryCount === 0) setProfileLoadError(false);
-    
+  const DEFAULT_GUEST_PROFILE = {
+    id: `guest-${Date.now()}`,
+    name: 'Guest User',
+    age: '',
+    city: '',
+    bio: '',
+    photo: null,
+    plansHosted: 0,
+    plansJoined: 0,
+    rating: 0
+  };
+
+  const clearSupabaseStorage = () => {
+    try {
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('sb-')) {
+          localStorage.removeItem(key);
+        }
+      }
+    } catch (e) {
+      console.error('Could not clear local storage', e);
+    }
+  };
+
+  const fetchUserProfile = async (userId) => {
     try {
       const { data, error } = await supabase
         .from('perfiles_usuario')
@@ -50,47 +73,64 @@ function App() {
         .eq('id', userId)
         .single();
       
-      if (error && retryCount < 3) {
-        setTimeout(() => fetchUserProfile(userId, retryCount + 1), 1000);
+      if (error) {
+        console.warn('Error fetching profile, using guest profile:', error);
+        setUserProfile({ ...DEFAULT_GUEST_PROFILE, id: userId });
         return;
       }
 
-      if (data && !error) {
+      // Data Versioning check - ensure the expected fields exist (checking for 'nombre' as well)
+      if (data && ('full_name' in data || 'name' in data || 'nombre' in data)) {
         setUserProfile({
-          id: data.id,
-          name: data.full_name || 'User',
+          id: data.id || userId,
+          name: data.full_name || data.name || data.nombre || 'User',
           age: data.age || '',
           city: data.city || '',
           bio: data.bio || '',
-          photo: data.photo_url || null,
+          photo: data.photo_url || data.foto_perfil || null,
           plansHosted: data.plans_hosted ?? 0,
           plansJoined: data.plans_joined ?? 0,
           rating: data.rating ?? 0
         });
         if (data.city) fetchUsersInCity(data.city);
       } else {
-        setProfileLoadError(true);
+        console.warn('Profile structure mismatch, clearing storage and using guest profile');
+        clearSupabaseStorage();
+        setUserProfile({ ...DEFAULT_GUEST_PROFILE, id: userId });
       }
     } catch (err) {
-      console.error('Error fetching profile:', err);
-      if (retryCount < 3) {
-        setTimeout(() => fetchUserProfile(userId, retryCount + 1), 1000);
-      } else {
-        setProfileLoadError(true);
-      }
+      console.error('Exception in fetchUserProfile:', err);
+      setUserProfile({ ...DEFAULT_GUEST_PROFILE, id: userId });
     }
   };
 
+  // Safety Timeout Effect: Force load if stuck
   React.useEffect(() => {
-    // Always sign out on app start so the user sees the login screen
-    supabase.auth.signOut().then(() => {
-      setSession(null);
-      setUserProfile(null);
-    });
+    let safetyTimer;
+    if (session && !userProfile) {
+      safetyTimer = setTimeout(() => {
+        console.warn('Safety timeout triggered! Forcing default profile to unblock UI.');
+        setUserProfile({ ...DEFAULT_GUEST_PROFILE, id: session.user?.id || DEFAULT_GUEST_PROFILE.id });
+      }, 3000);
+    }
+    return () => clearTimeout(safetyTimer);
+  }, [session, userProfile]);
+
+  React.useEffect(() => {
+    // Forcefully clear everything so the user MUST log in every time they enter the app
+    setSession(null);
+    setUserProfile(null);
+    clearSupabaseStorage();
+    supabase.auth.signOut().catch(e => console.error("SignOut error:", e));
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      // Ignore INITIAL_SESSION because we want to force a fresh login
+      if (event === 'INITIAL_SESSION') {
+        return;
+      }
+      
       setSession(session);
       if (session) {
         fetchUserProfile(session.user.id);
@@ -393,6 +433,7 @@ function App() {
           userProfile={userProfile}
           onBack={() => setCurrentTab('discover')} 
           onLogout={async () => {
+            clearSupabaseStorage();
             await supabase.auth.signOut();
             setCurrentTab('discover');
             setNotifications([]);
@@ -447,15 +488,7 @@ function App() {
   if (!userProfile) {
     return (
       <div className="app-container" style={{ backgroundColor: '#ffffff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '20px', padding: '20px' }}>
-        {profileLoadError ? (
-          <>
-            <p style={{ color: 'var(--color-gray-500)', textAlign: 'center' }}>{t('errorLoadingProfile', 'Hubo un problema al cargar tu perfil.')}</p>
-            <button className="btn-primary" onClick={() => fetchUserProfile(session?.user?.id)}>Reintentar</button>
-            <button className="btn-secondary" onClick={() => supabase.auth.signOut()}>Cerrar Sesión</button>
-          </>
-        ) : (
-          <p>Loading profile...</p>
-        )}
+        <p>Loading profile...</p>
       </div>
     );
   }
