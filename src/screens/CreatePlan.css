@@ -253,3 +253,116 @@
   cursor: not-allowed;
   transform: none;
 }
+
+/* ── Plan image uploader ── */
+.plan-image-upload-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 28px 20px;
+  border: 2px dashed var(--color-gray-200);
+  border-radius: 16px;
+  background: var(--color-gray-50);
+  color: var(--color-gray-500);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  text-align: center;
+}
+
+.plan-image-upload-btn:hover {
+  border-color: var(--color-turquoise);
+  background: rgba(0, 210, 200, 0.04);
+  color: var(--color-turquoise-dark);
+}
+
+.plan-image-upload-btn span {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.plan-image-hint {
+  font-size: 11px !important;
+  font-weight: 400 !important;
+  color: var(--color-gray-400);
+  margin-top: -4px;
+}
+
+.plan-image-preview-container {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: var(--color-gray-100);
+}
+
+.plan-image-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.plan-image-remove-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0,0,0,0.55);
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  cursor: pointer;
+  transition: background 0.2s;
+  backdrop-filter: blur(4px);
+}
+
+.plan-image-remove-btn:hover {
+  background: rgba(0,0,0,0.75);
+}
+
+.plan-image-change-btn {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255,255,255,0.85);
+  border: none;
+  border-radius: 20px;
+  padding: 6px 18px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-gray-800);
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+
+.plan-image-change-btn:hover {
+  background: rgba(255,255,255,1);
+}
+
+/* Submit loading indicator */
+.submit-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.btn-spinner {
+  animation: spin 0.9s linear infinite;
+}

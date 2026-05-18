@@ -1,9 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './CreatePlan.css';
-import { MapPin, Map, Search } from 'lucide-react';
+import { MapPin, Map, Search, ImagePlus, Loader, X } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
 import { useUserLocation } from '../contexts/UserLocationContext';
 import LocationPickerMap from '../components/LocationPickerMap';
+import { supabase } from '../utils/supabaseClient';
+
+const BUCKET = 'squad-images';
+const DEFAULT_PLAN_IMAGE =
+  'https://images.unsplash.com/photo-1523301343968-6a6ebf63c672?auto=format&fit=crop&w=500&q=80';
 
 const CreatePlan = ({ onCreate, userProfile }) => {
   const { t } = useLanguage();
@@ -13,21 +18,28 @@ const CreatePlan = ({ onCreate, userProfile }) => {
   const [maxGroupSize, setMaxGroupSize] = useState(8);
   const [minAge, setMinAge] = useState(21);
   const [maxAge, setMaxAge] = useState(35);
-  
+
   // Location state
   const [locationObj, setLocationObj] = useState({ address: '', lat: null, lng: null });
   const [addressInput, setAddressInput] = useState('');
-  
+
   // Autocomplete state
   const [suggestions, setSuggestions] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  
+
   // Map Modal state
   const [showMapModal, setShowMapModal] = useState(false);
 
   const [selectedTags, setSelectedTags] = useState([]);
   const [eventDate, setEventDate] = useState('');
+
+  // ── Plan Image Upload state ──────────────────────────────────────────────────
+  const [planImageFile, setPlanImageFile] = useState(null);      // raw File object
+  const [planImagePreview, setPlanImagePreview] = useState(null); // local blob URL for preview
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const planImageInputRef = useRef(null);
 
   const availableTags = ['Sports ⚽', 'Drinking 🍺', 'Music 🎵', 'Outdoors 🌲', 'Chill ☕', 'Beach 🌊', 'Hiking 🥾', 'Padel 🎾', 'Gaming 🎮'];
 
@@ -52,7 +64,7 @@ const CreatePlan = ({ onCreate, userProfile }) => {
           setSuggestions(data);
           setShowSuggestions(true);
         } catch (e) {
-          console.error("Nominatim search failed", e);
+          console.error('Nominatim search failed', e);
         } finally {
           setIsSearching(false);
         }
@@ -68,7 +80,7 @@ const CreatePlan = ({ onCreate, userProfile }) => {
   const handleSelectSuggestion = (suggestion) => {
     const parts = suggestion.display_name.split(', ');
     const simplified = parts.slice(0, 3).join(', ');
-    
+
     setAddressInput(simplified);
     setLocationObj({
       address: simplified,
@@ -101,7 +113,7 @@ const CreatePlan = ({ onCreate, userProfile }) => {
           setLocationObj({ address: `${loc.lat.toFixed(4)}, ${loc.lng.toFixed(4)}`, lat: loc.lat, lng: loc.lng });
         }
       } catch (e) {
-        console.error("Nominatim reverse geocode failed", e);
+        console.error('Nominatim reverse geocode failed', e);
         setAddressInput(`${loc.lat.toFixed(4)}, ${loc.lng.toFixed(4)}`);
         setLocationObj({ address: `${loc.lat.toFixed(4)}, ${loc.lng.toFixed(4)}`, lat: loc.lat, lng: loc.lng });
       }
@@ -110,15 +122,63 @@ const CreatePlan = ({ onCreate, userProfile }) => {
     }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!title) return;
+  // ── Plan image picker ────────────────────────────────────────────────────────
+  const handlePlanImageChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPlanImageFile(file);
+    // Create a local blob URL for immediate preview
+    setPlanImagePreview(URL.createObjectURL(file));
+    // Reset input so re-selecting same file works
+    if (planImageInputRef.current) planImageInputRef.current.value = '';
+  };
 
-    // Validate that creator's age is within the plan's age range
+  const clearPlanImage = () => {
+    setPlanImageFile(null);
+    if (planImagePreview) URL.revokeObjectURL(planImagePreview);
+    setPlanImagePreview(null);
+  };
+
+  // ── Submit ───────────────────────────────────────────────────────────────────
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!title || isSubmitting) return;
+
+    // Validate creator age against plan range
     const creatorAge = parseInt(userProfile.age);
     if (creatorAge && (creatorAge < parseInt(minAge) || creatorAge > parseInt(maxAge))) {
       alert(`Tu edad (${creatorAge}) debe estar dentro del rango de edad del plan (${minAge}-${maxAge}).`);
       return;
+    }
+
+    setIsSubmitting(true);
+
+    // Upload plan image if one was chosen
+    let finalImageUrl = DEFAULT_PLAN_IMAGE;
+    if (planImageFile) {
+      setIsUploadingImage(true);
+      try {
+        const ext = planImageFile.name.split('.').pop();
+        const fileName = `plans/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from(BUCKET)
+          .upload(fileName, planImageFile, { upsert: false });
+
+        if (uploadError) throw uploadError;
+
+        const { data: urlData } = supabase.storage
+          .from(BUCKET)
+          .getPublicUrl(fileName);
+
+        finalImageUrl = urlData.publicUrl;
+      } catch (err) {
+        console.error('Plan image upload failed:', err);
+        alert('No se pudo subir la imagen. Se usará una imagen por defecto.');
+        finalImageUrl = DEFAULT_PLAN_IMAGE;
+      } finally {
+        setIsUploadingImage(false);
+      }
     }
 
     const newSquad = {
@@ -133,17 +193,17 @@ const CreatePlan = ({ onCreate, userProfile }) => {
       maxAge: parseInt(maxAge),
       maxGroupSize: parseInt(maxGroupSize),
       distance: '0.0 mi',
-      membersCount: 1, 
-      image: 'https://images.unsplash.com/photo-1523301343968-6a6ebf63c672?auto=format&fit=crop&w=500&q=80', 
+      membersCount: 1,
+      image: finalImageUrl,
       leaderAvatar: userProfile.photo,
-      tags: selectedTags.map(t => t.split(' ')[0]), 
+      tags: selectedTags.map(t => t.split(' ')[0]),
       description: description || 'Looking to form a squad for this plan!',
       eventDate: eventDate || null
     };
 
-    onCreate(newSquad);
-    
-    // Cleanup
+    await onCreate(newSquad);
+
+    // Cleanup form
     setTitle('');
     setDescription('');
     setMaxGroupSize(8);
@@ -153,12 +213,16 @@ const CreatePlan = ({ onCreate, userProfile }) => {
     setLocationObj({ address: '', lat: null, lng: null });
     setSelectedTags([]);
     setEventDate('');
+    clearPlanImage();
+    setIsSubmitting(false);
   };
+
+  const isLoading = isUploadingImage || isSubmitting;
 
   return (
     <div className="create-plan">
       {showMapModal && (
-        <LocationPickerMap 
+        <LocationPickerMap
           initialLocation={locationObj.lat ? locationObj : null}
           onConfirm={handleMapConfirm}
           onClose={() => setShowMapModal(false)}
@@ -168,12 +232,12 @@ const CreatePlan = ({ onCreate, userProfile }) => {
       <form onSubmit={handleSubmit} className="create-form">
         <div className="form-section">
           <h3 className="section-label">{t('planDetails')}</h3>
-          
+
           <div className="input-group">
             <label>{t('activityName')}</label>
-            <input 
-              type="text" 
-              placeholder={t('activityPlaceholder')} 
+            <input
+              type="text"
+              placeholder={t('activityPlaceholder')}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
@@ -182,7 +246,7 @@ const CreatePlan = ({ onCreate, userProfile }) => {
 
           <div className="input-group">
             <label>{t('description')}</label>
-            <textarea 
+            <textarea
               placeholder={t('descPlaceholder')}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -192,7 +256,7 @@ const CreatePlan = ({ onCreate, userProfile }) => {
 
           <div className="input-group">
             <label>Fecha y hora del evento</label>
-            <input 
+            <input
               type="datetime-local"
               value={eventDate}
               onChange={(e) => setEventDate(e.target.value)}
@@ -201,19 +265,59 @@ const CreatePlan = ({ onCreate, userProfile }) => {
             />
           </div>
 
+          {/* ── Plan Image Uploader ── */}
+          <div className="input-group">
+            <label>Plan Image</label>
+            <input
+              ref={planImageInputRef}
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={handlePlanImageChange}
+              id="plan-image-input"
+            />
+
+            {planImagePreview ? (
+              <div className="plan-image-preview-container">
+                <img
+                  src={planImagePreview}
+                  alt="Plan preview"
+                  className="plan-image-preview"
+                />
+                <button
+                  type="button"
+                  className="plan-image-remove-btn"
+                  onClick={clearPlanImage}
+                  title="Remove image"
+                >
+                  <X size={14} />
+                </button>
+                <label htmlFor="plan-image-input" className="plan-image-change-btn">
+                  Change
+                </label>
+              </div>
+            ) : (
+              <label htmlFor="plan-image-input" className="plan-image-upload-btn">
+                <ImagePlus size={20} />
+                <span>Upload Plan Photo</span>
+                <span className="plan-image-hint">Optional · Falls back to default</span>
+              </label>
+            )}
+          </div>
+
           <div className="input-group">
             <label>{t('location')}</label>
             <div className="location-input-wrapper">
               <div className="location-input-container">
                 <Search size={14} className="search-icon" color="var(--color-gray-400)" />
-                <input 
-                  type="text" 
-                  placeholder={t('locPlaceholder')} 
+                <input
+                  type="text"
+                  placeholder={t('locPlaceholder')}
                   value={addressInput}
                   onChange={(e) => {
                     setAddressInput(e.target.value);
                     if (locationObj.address !== e.target.value) {
-                      setLocationObj({ address: '', lat: null, lng: null }); // Clear exact coords if they type manually
+                      setLocationObj({ address: '', lat: null, lng: null });
                     }
                   }}
                   onFocus={() => {
@@ -221,10 +325,10 @@ const CreatePlan = ({ onCreate, userProfile }) => {
                   }}
                   style={{ paddingLeft: '32px', paddingRight: '120px' }}
                 />
-                
+
                 <div className="location-actions">
                   <button type="button" className="use-mine-btn" onClick={handleUseLocation}>
-                    <MapPin size={12} style={{marginRight: '4px'}}/> {t('useMine')}
+                    <MapPin size={12} style={{ marginRight: '4px' }} /> {t('useMine')}
                   </button>
                   <button type="button" className="open-map-btn" onClick={() => setShowMapModal(true)}>
                     <Map size={16} color="white" />
@@ -241,7 +345,7 @@ const CreatePlan = ({ onCreate, userProfile }) => {
                     suggestions.map((s, idx) => (
                       <li key={idx} className="suggestion-item" onClick={() => handleSelectSuggestion(s)}>
                         <MapPin size={14} color="var(--color-gray-400)" />
-                        <span>{s.display_name.split(', ').slice(0,3).join(', ')}</span>
+                        <span>{s.display_name.split(', ').slice(0, 3).join(', ')}</span>
                       </li>
                     ))
                   ) : addressInput.length > 2 ? (
@@ -255,16 +359,16 @@ const CreatePlan = ({ onCreate, userProfile }) => {
 
         <div className="form-section">
           <h3 className="section-label">{t('configuration')}</h3>
-          
+
           <div className="input-group">
             <div className="slider-header">
               <label>{t('maxGroupSize')}</label>
               <span className="slider-value">{maxGroupSize}</span>
             </div>
-            <input 
-              type="range" 
-              min="2" 
-              max="20" 
+            <input
+              type="range"
+              min="2"
+              max="20"
               value={maxGroupSize}
               onChange={(e) => setMaxGroupSize(e.target.value)}
               className="range-slider"
@@ -274,17 +378,17 @@ const CreatePlan = ({ onCreate, userProfile }) => {
           <div className="input-group">
             <div className="slider-header">
               <label>{t('targetAgeRange')}</label>
-              <span className="slider-value" style={{color: 'var(--color-amber)'}}>{minAge}-{maxAge}</span>
+              <span className="slider-value" style={{ color: 'var(--color-amber)' }}>{minAge}-{maxAge}</span>
             </div>
             <div className="age-range-inputs">
               <div className="age-input-box">
                 <span>{t('min')}</span>
-                <input type="number" value={minAge} onChange={(e)=>setMinAge(e.target.value)} min="18" max="100"/>
+                <input type="number" value={minAge} onChange={(e) => setMinAge(e.target.value)} min="18" max="100" />
               </div>
-              <span style={{color: 'var(--color-gray-400)'}}>{t('to')}</span>
+              <span style={{ color: 'var(--color-gray-400)' }}>{t('to')}</span>
               <div className="age-input-box">
                 <span>{t('max')}</span>
-                <input type="number" value={maxAge} onChange={(e)=>setMaxAge(e.target.value)} min="18" max="100"/>
+                <input type="number" value={maxAge} onChange={(e) => setMaxAge(e.target.value)} min="18" max="100" />
               </div>
             </div>
           </div>
@@ -293,8 +397,8 @@ const CreatePlan = ({ onCreate, userProfile }) => {
             <label>{t('activityTags', { count: selectedTags.length })}</label>
             <div className="tags-selector">
               {availableTags.map(tag => (
-                <button 
-                  key={tag} 
+                <button
+                  key={tag}
                   type="button"
                   className={`tag-select-btn ${selectedTags.includes(tag) ? 'selected' : ''}`}
                   onClick={() => toggleTag(tag)}
@@ -307,8 +411,19 @@ const CreatePlan = ({ onCreate, userProfile }) => {
         </div>
 
         <div className="form-actions">
-          <button type="submit" className="submit-plan-btn" disabled={!title || !locationObj.lat}>
-            {t('postSquadPlan')}
+          <button
+            type="submit"
+            className="submit-plan-btn"
+            disabled={!title || !locationObj.lat || isLoading}
+          >
+            {isLoading ? (
+              <span className="submit-loading">
+                <Loader size={18} className="btn-spinner" />
+                {isUploadingImage ? 'Uploading image...' : 'Publishing...'}
+              </span>
+            ) : (
+              t('postSquadPlan')
+            )}
           </button>
         </div>
       </form>

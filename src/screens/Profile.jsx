@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
-import { Camera, User as UserIcon } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Camera, User as UserIcon, Loader } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
 import { supabase } from '../utils/supabaseClient';
 import './Profile.css';
+
+const BUCKET = 'squad-images';
+const DEFAULT_AVATAR = 'https://via.placeholder.com/150';
 
 const Profile = ({ userProfile, setUserProfile }) => {
   const { t } = useLanguage();
@@ -11,8 +14,57 @@ const Profile = ({ userProfile, setUserProfile }) => {
     ...userProfile,
     bio: userProfile.bio || ''
   });
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const fileInputRef = useRef(null);
 
+  // ── Avatar Upload ────────────────────────────────────────────────────────────
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !userProfile.id) return;
+
+    setIsUploadingAvatar(true);
+    try {
+      // Unique filename to avoid overwriting
+      const ext = file.name.split('.').pop();
+      const fileName = `avatars/${userProfile.id}_${Date.now()}.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from(BUCKET)
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from(BUCKET)
+        .getPublicUrl(fileName);
+
+      const publicUrl = urlData.publicUrl;
+
+      // Persist to DB
+      const { error: dbError } = await supabase
+        .from('perfiles_usuario')
+        .update({ photo_url: publicUrl })
+        .eq('id', userProfile.id);
+
+      if (dbError) throw dbError;
+
+      // Update local state immediately
+      setUserProfile(prev => ({ ...prev, photo: publicUrl }));
+      setEditForm(prev => ({ ...prev, photo: publicUrl }));
+    } catch (err) {
+      console.error('Avatar upload failed:', err);
+      alert('No se pudo subir la foto. Inténtalo de nuevo.');
+    } finally {
+      setIsUploadingAvatar(false);
+      // Reset input so re-selecting the same file triggers onChange again
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  // ── Profile text save ────────────────────────────────────────────────────────
   const handleSave = async () => {
+    setIsSaving(true);
     // Optimistic UI update
     setUserProfile({ ...editForm });
     setIsEditing(false);
@@ -24,25 +76,73 @@ const Profile = ({ userProfile, setUserProfile }) => {
           full_name: editForm.name,
           age: editForm.age,
           city: editForm.city,
-          bio: editForm.bio
-          // Note: we can add interests edit support here if you add a UI for it
+          bio: editForm.bio,
         })
         .eq('id', userProfile.id);
-        
+
       if (error) {
-        console.error("Error updating profile:", error);
-        alert("Hubo un problema actualizando tu perfil.");
+        console.error('Error updating profile:', error);
+        alert('Hubo un problema actualizando tu perfil.');
       }
     }
+    setIsSaving(false);
   };
 
+  // ── Avatar widget (shared between view & edit mode) ──────────────────────────
+  const AvatarWidget = () => (
+    <div className="profile-avatar-container">
+      {isUploadingAvatar ? (
+        <div className="profile-avatar-uploading">
+          <Loader size={32} className="avatar-spinner" />
+        </div>
+      ) : editForm.photo || userProfile.photo ? (
+        <img
+          src={editForm.photo || userProfile.photo}
+          alt={userProfile.name}
+          className="profile-avatar-large"
+        />
+      ) : (
+        <div className="profile-avatar-placeholder">
+          <UserIcon size={48} color="#94a3b8" />
+        </div>
+      )}
+
+      {/* Hidden real file input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        style={{ display: 'none' }}
+        onChange={handleAvatarChange}
+        id="avatar-file-input"
+      />
+
+      {/* Visible camera button triggers the hidden input */}
+      <label
+        htmlFor="avatar-file-input"
+        className={`camera-btn ${isUploadingAvatar ? 'camera-btn--disabled' : ''}`}
+        title="Change photo"
+      >
+        <Camera size={16} color="white" />
+      </label>
+    </div>
+  );
+
+  // ── Edit view ────────────────────────────────────────────────────────────────
   if (isEditing) {
     return (
       <div className="profile-screen">
         <div className="profile-edit-header">
           <button onClick={() => setIsEditing(false)} className="cancel-btn">{t('cancel')}</button>
           <h3>{t('editProfile')}</h3>
-          <button onClick={handleSave} className="save-btn">{t('save')}</button>
+          <button onClick={handleSave} className="save-btn" disabled={isSaving}>
+            {isSaving ? <Loader size={14} className="btn-spinner" /> : t('save')}
+          </button>
+        </div>
+
+        {/* Avatar uploader inside edit mode too */}
+        <div style={{ display: 'flex', justifyContent: 'center', paddingTop: '8px' }}>
+          <AvatarWidget />
         </div>
 
         <div className="profile-form">
@@ -75,21 +175,11 @@ const Profile = ({ userProfile, setUserProfile }) => {
     );
   }
 
+  // ── View mode ────────────────────────────────────────────────────────────────
   return (
     <div className="profile-screen">
       <div className="profile-header-card">
-        <div className="profile-avatar-container">
-          {userProfile.photo ? (
-            <img src={userProfile.photo} alt={userProfile.name} className="profile-avatar-large" />
-          ) : (
-            <div className="profile-avatar-placeholder">
-              <UserIcon size={48} color="#94a3b8" />
-            </div>
-          )}
-          <button className="camera-btn">
-            <Camera size={16} color="white" />
-          </button>
-        </div>
+        <AvatarWidget />
 
         <div className="profile-stats">
           <div className="stat-item">
@@ -127,12 +217,9 @@ const Profile = ({ userProfile, setUserProfile }) => {
 
         <div className="detail-row">
           <p className="detail-label">{t('bioLabel')}</p>
-          <p className="detail-value-text">
-            {userProfile.bio}
-          </p>
+          <p className="detail-value-text">{userProfile.bio}</p>
         </div>
       </div>
-
     </div>
   );
 };
