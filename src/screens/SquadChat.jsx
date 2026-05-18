@@ -10,30 +10,46 @@ const SquadChat = ({ matchData, userProfile, onBack }) => {
   useEffect(() => {
     const fetchMessages = async () => {
       if (!matchData?.squad?.id) return;
-      const { data, error } = await supabase
+
+      // Step 1: Fetch raw messages (no join — sender_id FK points to auth.users, not perfiles_usuario)
+      const { data: msgData, error: msgError } = await supabase
         .from('mensajes_chat')
-        .select(`
-          id,
-          text,
-          created_at,
-          sender_id,
-          perfiles_usuario (nombre, foto_perfil)
-        `)
+        .select('id, text, created_at, sender_id')
         .eq('plan_id', matchData.squad.id)
         .order('created_at', { ascending: true });
 
-      if (error) {
-        console.error('Error fetching messages:', error);
-      } else if (data) {
-        const formatted = data.map(msg => ({
+      if (msgError) {
+        console.error('Error fetching messages:', msgError);
+        return;
+      }
+      if (!msgData || msgData.length === 0) {
+        setMessages([]);
+        return;
+      }
+
+      // Step 2: Collect unique sender IDs and batch-fetch their profiles
+      const senderIds = [...new Set(msgData.map(m => m.sender_id))];
+      const { data: profileData } = await supabase
+        .from('perfiles_usuario')
+        .select('id, full_name, photo_url')
+        .in('id', senderIds);
+
+      // Step 3: Build a lookup map id → profile
+      const profileMap = {};
+      (profileData || []).forEach(p => { profileMap[p.id] = p; });
+
+      // Step 4: Map profiles onto messages for the UI
+      const formatted = msgData.map(msg => {
+        const profile = profileMap[msg.sender_id];
+        return {
           id: msg.id,
           text: msg.text,
           sender: msg.sender_id === userProfile.id ? 'us' : 'them',
-          user: msg.perfiles_usuario?.nombre || 'User',
-          avatar: msg.perfiles_usuario?.foto_perfil || 'https://via.placeholder.com/150'
-        }));
-        setMessages(formatted);
-      }
+          user: profile?.full_name || 'User',
+          avatar: profile?.photo_url || 'https://via.placeholder.com/150'
+        };
+      });
+      setMessages(formatted);
     };
 
     fetchMessages();
@@ -50,10 +66,10 @@ const SquadChat = ({ matchData, userProfile, onBack }) => {
           filter: `plan_id=eq.${matchData.squad.id}`
         },
         async (payload) => {
-          // Fetch the user profile for the new message
-          const { data: userProfileData } = await supabase
+          // Fetch the sender's profile using correct column names
+          const { data: senderProfile } = await supabase
             .from('perfiles_usuario')
-            .select('nombre, foto_perfil')
+            .select('full_name, photo_url')
             .eq('id', payload.new.sender_id)
             .single();
 
@@ -61,8 +77,8 @@ const SquadChat = ({ matchData, userProfile, onBack }) => {
             id: payload.new.id,
             text: payload.new.text,
             sender: payload.new.sender_id === userProfile.id ? 'us' : 'them',
-            user: userProfileData?.nombre || 'User',
-            avatar: userProfileData?.foto_perfil || 'https://via.placeholder.com/150'
+            user: senderProfile?.full_name || 'User',
+            avatar: senderProfile?.photo_url || 'https://via.placeholder.com/150'
           };
           
           setMessages(prev => {

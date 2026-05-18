@@ -25,6 +25,7 @@ function App() {
   const [currentTab, setCurrentTab] = useState('discover');
   const [showMatchOverlay, setShowMatchOverlay] = useState(false);
   const [activeChatId, setActiveChatId] = useState(null);
+  const [activeChatData, setActiveChatData] = useState(null); // BUG FIX: dedicated state to avoid race condition
   const [selectedPlanDetails, setSelectedPlanDetails] = useState(null); 
 
   const [userProfile, setUserProfile] = useState(null);
@@ -246,6 +247,9 @@ function App() {
     };
     setMatches(prev => [newMatch, ...prev]);
 
+    // BUG FIX: Optimistically bump membersCount in local squads state so badge updates instantly
+    setSquads(prev => prev.map(s => s.id === squad.id ? { ...s, membersCount: (s.membersCount || 0) + 1 } : s));
+
     // Save the join to Supabase
     if (session?.user?.id) {
       const { error } = await supabase
@@ -262,7 +266,7 @@ function App() {
       if (rpcError) {
         console.error('Error incrementing members_count via rpc:', rpcError);
       } else {
-        await fetchPlans(); // Refresh so "Mis Planes" shows the updated count
+        await fetchPlans(); // Refresh so "Mis Planes" shows the confirmed count
       }
     }
 
@@ -284,11 +288,12 @@ function App() {
   };
 
   const handleOpenChatFromMatch = (matchData) => {
-    // BUG FIX: matchData now carries the matchId so we open the right chat.
-    // The match was already added in handleLike, so we just navigate to it.
     const matchId = matchData.matchId || matches[0]?.id;
+    // BUG FIX: find the actual match object and set activeChatData atomically
+    const foundMatch = matches.find(m => m.id === matchId) || matches[0];
     setShowMatchOverlay(false);
     setActiveChatId(matchId);
+    setActiveChatData(foundMatch);
   };
 
   const handleCreatePlan = async (newPlan) => {
@@ -418,7 +423,11 @@ function App() {
         });
         return <Matches 
           matches={matches} 
-          onOpenChat={(id) => setActiveChatId(id)} 
+          onOpenChat={(id) => {
+            const found = matches.find(m => m.id === id);
+            setActiveChatId(id);
+            setActiveChatData(found);
+          }} 
           userPlans={userPlans} 
           onInfo={handleOpenInfo}
           onUpdatePlan={handleUpdatePlan}
@@ -433,11 +442,16 @@ function App() {
           userProfile={userProfile}
           onBack={() => setCurrentTab('discover')} 
           onLogout={async () => {
+            // BUG FIX: Clear local state FIRST so the login screen renders immediately
+            // without waiting for the Supabase auth event to propagate.
+            setSession(null);
+            setUserProfile(null);
+            setMatches([]);
+            setJoinedPlanIds(new Set());
+            setNotifications([]);
+            setCurrentTab('discover');
             clearSupabaseStorage();
             await supabase.auth.signOut();
-            setCurrentTab('discover');
-            setNotifications([]);
-            setMatches([]);
           }}
         />;
       default:
@@ -464,7 +478,6 @@ function App() {
     return null;
   }
 
-  const activeChatData = matches.find(m => m.id === activeChatId);
   const hideTopBar = activeChatId || currentTab === 'settings' || currentTab === 'notifications';
   const hideBottomNav = activeChatId;
 
@@ -552,19 +565,24 @@ function App() {
             isJoined={isJoined}
             onOpenChat={() => {
               setSelectedPlanDetails(null);
-              // For creator plans without a match object yet, we simulate one
-              if (!joinedMatch && isCreator) {
-                const newCreatorMatch = {
+              // BUG FIX: Build the match object and set activeChatData atomically with activeChatId
+              // so the chat panel always mounts, regardless of React's batch-update order.
+              let matchToOpen = joinedMatch;
+              if (!matchToOpen) {
+                // Creator or edge case: synthesize a transient match object for the chat
+                matchToOpen = {
                   id: matchIdToOpen,
                   squad: selectedPlanDetails,
-                  messages: [{ id: 1, text: "Bienvenido a tu Squad Chat!", sender: 'us', user: userProfile.name, avatar: userProfile.photo }],
+                  messages: [],
                   lastActive: 'Ahora'
                 };
+                // Also add it to matches so the Matches tab reflects it
                 if (!matches.find(m => m.id === matchIdToOpen)) {
-                  setMatches([newCreatorMatch, ...matches]);
+                  setMatches(prev => [matchToOpen, ...prev]);
                 }
               }
               setActiveChatId(matchIdToOpen);
+              setActiveChatData(matchToOpen);
             }}
           />
         );
@@ -575,7 +593,7 @@ function App() {
         <SquadChat 
           matchData={activeChatData} 
           userProfile={userProfile}
-          onBack={() => setActiveChatId(null)} 
+          onBack={() => { setActiveChatId(null); setActiveChatData(null); }} 
           onUpdateMessages={(newMessages) => {
             const updatedMatches = matches.map(m => 
               m.id === activeChatId ? { ...m, messages: newMessages } : m
