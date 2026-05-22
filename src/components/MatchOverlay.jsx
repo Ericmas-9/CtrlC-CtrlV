@@ -10,7 +10,7 @@ const MatchOverlay = ({ onClose, onOpenChat, image1, image2, squad }) => {
       <div className="match-content">
         <div className="match-header">
           <div className="happening-badge">
-            <Zap size={14} fill="currentColor" /> IT'S HAPPENING!
+            <Zap size={14} fill="currentColor" /> IT&apos;S HAPPENING!
           </div>
           <h1 className="match-title">
             {t('itsA')}<br /><span className="match-highlight">{t('squadMatch')}</span>

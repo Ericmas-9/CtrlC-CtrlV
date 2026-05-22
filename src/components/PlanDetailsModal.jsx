@@ -19,7 +19,9 @@ const PlanDetailsModal = ({ squad, onClose, onJoin, isJoined, onOpenChat }) => {
   const [profileUserId, setProfileUserId] = useState(null);
   const [showMembers, setShowMembers] = useState(false);
 
-  const position = (squad.lat && squad.lng) ? [squad.lat, squad.lng] : null;
+  const position = React.useMemo(() => {
+    return (squad.lat && squad.lng) ? [squad.lat, squad.lng] : null;
+  }, [squad.lat, squad.lng]);
 
   let distanceText = null;
   if (userLocation && position) {

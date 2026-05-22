@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, MapPin, Star } from 'lucide-react';
+import { X, MapPin } from 'lucide-react';
 import { supabase } from '../utils/supabaseClient';
 import './PublicProfileModal.css';
 

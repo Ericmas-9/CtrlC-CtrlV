@@ -5,7 +5,7 @@ import { supabase } from '../utils/supabaseClient';
 import './Profile.css';
 
 const BUCKET = 'squad-images';
-const DEFAULT_AVATAR = 'https://via.placeholder.com/150';
+
 
 const Profile = ({ userProfile, setUserProfile }) => {
   const { t } = useLanguage();

@@ -96,7 +96,7 @@ function Login({ onNavigateToRegister }) {
 
 
       <div className="auth-footer">
-        <p>Don't have an account? <button type="button" className="link-btn" onClick={onNavigateToRegister}>Sign Up</button></p>
+        <p>Don&apos;t have an account? <button type="button" className="link-btn" onClick={onNavigateToRegister}>Sign Up</button></p>
       </div>
     </div>
   );

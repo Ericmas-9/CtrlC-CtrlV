@@ -29,7 +29,7 @@ function App() {
   const [selectedPlanDetails, setSelectedPlanDetails] = useState(null); 
 
   const [userProfile, setUserProfile] = useState(null);
-  const [profileLoading, setProfileLoading] = useState(false);
+  const [, setProfileLoading] = useState(false);
   const [profileLoadError, setProfileLoadError] = useState(null);
   const [usersInCity, setUsersInCity] = useState(0);
 
@@ -154,7 +154,7 @@ function App() {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [fetchUserProfile]);
 
   const fetchPlans = async () => {
     const { data, error } = await supabase
@@ -318,7 +318,7 @@ function App() {
 
   const handleCreatePlan = async (newPlan) => {
     // Save plan to Supabase
-    const { data: inserted, error } = await supabase
+    const { error } = await supabase
       .from('planes')
       .insert([{
         creator_id: userProfile.id,
@@ -411,7 +411,7 @@ function App() {
   // --- RENDER LOGIC ---
   const renderScreen = () => {
     switch (currentTab) {
-      case 'discover':
+      case 'discover': {
         const filteredSquads = squads.filter(s => {
           // Don't show the user's own plans
           if (s.creatorId === userProfile.id) return false;
@@ -440,13 +440,14 @@ function App() {
             // Re-fetch ALL plans from Supabase so rows created by other users appear.
             const refreshed = await fetchPlans();
             if (refreshed && session?.user?.id) {
-              await fetchJoinedPlans(session.user.id, refreshed);
+               await fetchJoinedPlans(session.user.id, refreshed);
             }
           }}
         />;
+      }
       case 'create':
         return <CreatePlan onCreate={handleCreatePlan} userProfile={userProfile} />;
-      case 'matches':
+      case 'matches': {
         const userPlans = squads.filter(s => {
           if (s.creatorId !== userProfile.id) return false;
           if (!s.eventDate) return true;
@@ -469,6 +470,7 @@ function App() {
           onUpdatePlan={handleUpdatePlan}
           onDeletePlan={handleDeletePlan}
         />;
+      }
       case 'profile':
         return <Profile userProfile={userProfile} setUserProfile={setUserProfile} />;
       case 'notifications':

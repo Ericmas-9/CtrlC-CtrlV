@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
 import { MessageSquare, MapPin, Users, ClipboardList, Settings, Trash2, Check, X, Calendar } from 'lucide-react';
-import { useLanguage } from '../i18n/LanguageContext';
 import './Matches.css';
 
-const Matches = ({ matches, onOpenChat, userPlans = [], onInfo, onUpdatePlan, onDeletePlan }) => {
-  const { t } = useLanguage();
+const Matches = ({ matches, userPlans = [], onInfo, onUpdatePlan, onDeletePlan }) => {
 
   // State for the settings modal
   const [editingPlan, setEditingPlan] = useState(null);

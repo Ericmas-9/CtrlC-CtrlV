@@ -3,7 +3,7 @@ import { ChevronLeft, Lock, Shield, Link, Star, Ban, History, Eye, LogOut, Exter
 import { useLanguage } from '../i18n/LanguageContext';
 import './Settings.css';
 
-const Settings = ({ userProfile, onBack, onLogout }) => {
+const Settings = ({ onLogout }) => {
   const { t, language, changeLanguage } = useLanguage();
   const [activeSubView, setActiveSubView] = useState(null); 
   const [visibility, setVisibility] = useState('public');

@@ -44,7 +44,7 @@ export const UserLocationProvider = ({ children }) => {
     if (locationStatus === 'idle') {
       requestLocation();
     }
-  }, []);
+  }, [locationStatus]);
 
   return (
     <UserLocationContext.Provider value={{ userLocation, locationStatus, requestLocation }}>

@@ -15,19 +15,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl:     'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
-// ── Real LA-area coordinates for each mock squad ──
-const SQUAD_COORDS = {
-  'squad-1':  [34.0052, -118.4975],
-  'squad-2':  [34.1184, -118.3004],
-  'squad-3':  [33.9850, -118.4695],
-  'squad-4':  [34.0430, -118.2673],
-  'squad-5':  [33.8620, -118.4000],
-  'squad-6':  [34.0406, -118.2357],
-  'squad-7':  [34.0360, -118.6919],
-  'squad-8':  [34.0869, -118.2737],
-  'squad-9':  [34.0422, -118.2380],
-  'squad-10': [34.0100, -118.4965],
-};
+
 
 const MAP_CENTER = [34.0195, -118.4912];
 const MAP_ZOOM   = 12;

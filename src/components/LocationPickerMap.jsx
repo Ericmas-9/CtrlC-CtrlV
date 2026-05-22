@@ -81,7 +81,7 @@ const LocationPickerMap = ({ initialLocation, onConfirm, onClose }) => {
     });
 
     // Handle marker drag
-    marker.on('dragend', (e) => {
+    marker.on('dragend', () => {
       const { lat, lng } = marker.getLatLng();
       setCurrentCoords({ lat, lng });
       fetchAddress(lat, lng);
@@ -91,7 +91,7 @@ const LocationPickerMap = ({ initialLocation, onConfirm, onClose }) => {
       map.remove();
       mapRef.current = null;
     };
-  }, []); // Run once
+  }, [currentCoords.lat, currentCoords.lng]); // Run once
 
   const handleConfirm = () => {
     onConfirm({
