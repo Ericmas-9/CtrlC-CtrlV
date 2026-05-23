@@ -5,6 +5,7 @@ export const translations = {
     create: 'Crear',
     matches: 'Matches',
     profile: 'Perfil',
+    Chats: 'Xats',
     createPlanTitle: 'Crea un pla',
     createPlanSubtitle: 'Digues als altres què estàs planejant',
     matchesTitle: 'Els meus plans i matches',

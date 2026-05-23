@@ -28,7 +28,7 @@ const BottomNav = ({ currentTab, setCurrentTab }) => {
         onClick={() => setCurrentTab('matches')}
       >
         <MessageSquare size={24} className="nav-icon" />
-        <span className={`nav-label ${currentTab === 'matches' ? 'active-label' : ''}`}>Chats</span>
+        <span className={`nav-label ${currentTab === 'matches' ? 'active-label' : ''}`}>{t('Chats')}</span>
       </button>
 
       <button 
