@@ -190,6 +190,14 @@ const Profile = ({ userProfile, setUserProfile }) => {
             <h4>{userProfile.plansJoined ?? 0}</h4>
             <p>{t('plansJoined')}</p>
           </div>
+          <div className="stat-item">
+            <h4 className="stat-rating">
+              {userProfile.rating > 0
+                ? <>&#9733; {Number(userProfile.rating).toFixed(1)}</>
+                : '—'}
+            </h4>
+            <p>{t('rating')}</p>
+          </div>
         </div>
       </div>
 

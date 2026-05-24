@@ -315,3 +315,41 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* ── Rate plan button (in Otros Planes list) ── */
+.rate-plan-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  background: #fff7ed;
+  color: #f59e0b;
+  border: 1.5px solid #fcd34d;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.rate-plan-btn:hover {
+  background: #fef3c7;
+}
+
+.rate-plan-btn:active {
+  transform: scale(0.95);
+}
+
+.rated-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1.5px solid #bbf7d0;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+}

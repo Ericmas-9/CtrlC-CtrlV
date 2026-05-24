@@ -1,0 +1,203 @@
+/* ── Rating Modal Overlay ── */
+.rating-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 900;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: ratingFadeIn 0.2s ease-out;
+}
+
+.rating-modal {
+  width: 100%;
+  max-width: 480px;
+  background: #ffffff;
+  border-radius: 28px 28px 0 0;
+  overflow: hidden;
+  animation: ratingSlideUp 0.35s cubic-bezier(0.34, 1.4, 0.64, 1);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* ── Plan image header ── */
+.rating-plan-image {
+  height: 185px;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+}
+
+.rating-plan-image-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 20%, rgba(0, 0, 0, 0.68));
+  border-radius: 0;
+}
+
+.rating-plan-info {
+  position: relative;
+  z-index: 1;
+  padding: 0 20px 18px;
+  width: 100%;
+}
+
+.rating-event-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.72);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 4px;
+}
+
+.rating-plan-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.25;
+  margin: 0;
+}
+
+/* ── Body ── */
+.rating-body {
+  padding: 20px 24px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.rating-pending-pill {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-gray-500, #64748b);
+  background: var(--color-gray-100, #f1f5f9);
+  padding: 4px 14px;
+  border-radius: 20px;
+}
+
+.rating-subtitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-gray-700, #334155);
+  margin: 0;
+}
+
+/* ── Stars ── */
+.rating-stars {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.star-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease;
+  border-radius: 50%;
+}
+
+.star-btn:hover {
+  transform: scale(1.18);
+}
+
+.star-btn:active {
+  transform: scale(0.92);
+}
+
+.rating-star-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #FFB800;
+  margin: -4px 0 0;
+  min-height: 20px;
+  animation: ratingFadeIn 0.15s ease-out;
+}
+
+/* ── Optional comment ── */
+.rating-comment {
+  width: 100%;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 12px 14px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--color-gray-700, #334155);
+  resize: none;
+  outline: none;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+  animation: ratingFadeIn 0.2s ease-out;
+}
+
+.rating-comment:focus {
+  border-color: var(--color-turquoise, #06b6d4);
+}
+
+/* ── Buttons ── */
+.rating-actions {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rating-submit-btn {
+  width: 100%;
+  padding: 16px;
+  background: var(--color-turquoise, #06b6d4);
+  color: #ffffff;
+  border: none;
+  border-radius: 16px;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s;
+}
+
+.rating-submit-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.rating-submit-btn:not(:disabled):active {
+  transform: scale(0.97);
+}
+
+.rating-skip-btn {
+  width: 100%;
+  padding: 12px;
+  background: none;
+  border: none;
+  color: var(--color-gray-400, #94a3b8);
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.rating-skip-btn:hover {
+  color: var(--color-gray-600, #475569);
+}
+
+/* ── Animations ── */
+@keyframes ratingSlideUp {
+  from { transform: translateY(100%); opacity: 0.6; }
+  to   { transform: translateY(0);    opacity: 1;   }
+}
+
+@keyframes ratingFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}

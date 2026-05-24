@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { MessageSquare, MapPin, Users, ClipboardList, Settings, Trash2, Check, X, Calendar } from 'lucide-react';
+import { MessageSquare, MapPin, Users, ClipboardList, Settings, Trash2, Check, X, Calendar, Star } from 'lucide-react';
 import './Matches.css';
+import { useLanguage } from '../i18n/LanguageContext';
 
-const Matches = ({ matches, userPlans = [], onInfo, onUpdatePlan, onDeletePlan }) => {
+const Matches = ({ matches, userPlans = [], onInfo, onUpdatePlan, onDeletePlan, ratedPlanIds = new Set(), onRatePlan }) => {
+  const { t } = useLanguage();
 
   // State for the settings modal
   const [editingPlan, setEditingPlan] = useState(null);
@@ -125,15 +127,33 @@ const Matches = ({ matches, userPlans = [], onInfo, onUpdatePlan, onDeletePlan }
             {matches.map(match => {
               const squad = match.squad;
               const latestMsg = match.messages?.[match.messages.length - 1];
+              const isPast = squad.eventDate && new Date(squad.eventDate) < new Date();
+              const isRated = ratedPlanIds.has(squad.id);
               return (
                 <div key={match.id} className="match-list-item" onClick={() => onInfo && onInfo(squad)}>
                   <div className="my-plan-thumb" style={{ backgroundImage: `url(${squad.image})` }} />
                   <div className="match-item-content">
                     <div className="match-item-header">
                       <h4>{squad.planTitle || squad.squadName}</h4>
-                      <span className="meta-badge" style={{ fontSize: '11px' }}>
-                        <Users size={11} /> {squad.membersCount}/{squad.maxMembers ?? '?'}
-                      </span>
+                      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                        <span className="meta-badge" style={{ fontSize: '11px' }}>
+                          <Users size={11} /> {squad.membersCount}/{squad.maxMembers ?? '?'}
+                        </span>
+                        {isPast && !isRated && (
+                          <button
+                            className="rate-plan-btn"
+                            onClick={e => { e.stopPropagation(); onRatePlan && onRatePlan(squad); }}
+                            title={t('ratePlan')}
+                          >
+                            <Star size={13} /> {t('ratePlan')}
+                          </button>
+                        )}
+                        {isPast && isRated && (
+                          <span className="rated-badge">
+                            <Star size={12} fill="currentColor" /> {t('ratingSubmitted')}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     {latestMsg && (
                       <p className="match-latest-msg">

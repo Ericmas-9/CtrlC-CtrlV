@@ -10,6 +10,7 @@ import Profile from './screens/Profile';
 import Matches from './screens/Matches';
 import Notifications from './screens/Notifications';
 import PlanDetailsModal from './components/PlanDetailsModal';
+import RatingModal from './components/RatingModal';
 import Settings from './screens/Settings';
 import StatusBar from './components/StatusBar';
 import { useLanguage } from './i18n/LanguageContext';
@@ -146,6 +147,7 @@ function App() {
         const fetchedSquads = await fetchPlans();
         if (fetchedSquads) {
           fetchJoinedPlans(session.user.id, fetchedSquads);
+          fetchPendingRatings(session.user.id);
         }
       }
       if (event === 'PASSWORD_RECOVERY') {
@@ -236,6 +238,116 @@ function App() {
   // feedKey forces SquadFeed to remount (resetting its internal currentIndex)
   // every time the user hits Recargar, so new cards are visible immediately.
   const [feedKey, setFeedKey] = useState(0);
+
+  // --- RATING STATE ---
+  const [pendingRatings, setPendingRatings] = useState([]); // plans to rate (modal queue)
+  const [ratedPlanIds, setRatedPlanIds] = useState(new Set()); // already rated this session
+
+  // --- RATING HANDLERS ---
+  const fetchPendingRatings = async (userId) => {
+    // 1. Plans the user has joined
+    const { data: memberships } = await supabase
+      .from('plan_members')
+      .select('plan_id')
+      .eq('user_id', userId);
+
+    if (!memberships?.length) return;
+    const joinedIds = memberships.map(m => m.plan_id);
+
+    // 2. Past plans (event already happened), not created by this user
+    const { data: pastPlans } = await supabase
+      .from('planes')
+      .select('*')
+      .in('id', joinedIds)
+      .neq('creator_id', userId)
+      .lt('event_date', new Date().toISOString())
+      .not('event_date', 'is', null);
+
+    if (!pastPlans?.length) return;
+
+    // 3. Already rated by this user
+    const { data: existingRatings } = await supabase
+      .from('plan_ratings')
+      .select('plan_id')
+      .eq('user_id', userId);
+
+    const ratedIds = new Set(existingRatings?.map(r => r.plan_id) || []);
+    setRatedPlanIds(ratedIds);
+
+    // 4. Map to local shape and filter unrated
+    const pending = pastPlans
+      .filter(p => !ratedIds.has(p.id))
+      .map(p => ({
+        id: p.id,
+        planTitle: p.plan_title,
+        image: p.image,
+        creatorId: p.creator_id,
+      }));
+
+    if (pending.length > 0) setPendingRatings(pending);
+  };
+
+  const handleSubmitRating = async (plan, stars, comment) => {
+    const { error } = await supabase
+      .from('plan_ratings')
+      .insert([{ plan_id: plan.id, user_id: session.user.id, stars, comment: comment || null }]);
+
+    if (error) {
+      console.error('Error saving rating:', error);
+      return;
+    }
+
+    // Mark as rated locally
+    setRatedPlanIds(prev => new Set([...prev, plan.id]));
+    setPendingRatings(prev => prev.filter(p => p.id !== plan.id));
+
+    // Recompute creator's average rating
+    try {
+      const { data: creatorPlans } = await supabase
+        .from('planes')
+        .select('id')
+        .eq('creator_id', plan.creatorId);
+
+      if (creatorPlans?.length) {
+        const { data: allRatings } = await supabase
+          .from('plan_ratings')
+          .select('stars')
+          .in('plan_id', creatorPlans.map(p => p.id));
+
+        if (allRatings?.length) {
+          const avg = allRatings.reduce((sum, r) => sum + r.stars, 0) / allRatings.length;
+          const rounded = Math.round(avg * 10) / 10;
+          await supabase
+            .from('perfiles_usuario')
+            .update({ rating: rounded })
+            .eq('id', plan.creatorId);
+
+          // If the creator is the logged-in user, update local profile too
+          if (plan.creatorId === session.user.id) {
+            setUserProfile(prev => ({ ...prev, rating: rounded }));
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Error updating creator rating:', err);
+    }
+  };
+
+  const handleSkipRating = (planId) => {
+    // Remove from auto-modal queue; the button in Matches tab stays available
+    setPendingRatings(prev => prev.filter(p => p.id !== planId));
+  };
+
+  const handleRatePlanFromMatches = (squad) => {
+    // Triggered when user clicks "Rate" button in the Matches tab
+    const planForRating = {
+      id: squad.id,
+      planTitle: squad.planTitle,
+      image: squad.image,
+      creatorId: squad.creatorId,
+    };
+    setPendingRatings(prev => [planForRating, ...prev.filter(p => p.id !== squad.id)]);
+  };
 
   // --- HANDLERS ---
   const handleLike = async (squad) => {
@@ -469,6 +581,8 @@ function App() {
           onInfo={handleOpenInfo}
           onUpdatePlan={handleUpdatePlan}
           onDeletePlan={handleDeletePlan}
+          ratedPlanIds={ratedPlanIds}
+          onRatePlan={handleRatePlanFromMatches}
         />;
       }
       case 'profile':
@@ -709,6 +823,16 @@ function App() {
           />
         );
       })()}
+
+      {/* Rating Modal: appears when there are past unrated plans */}
+      {pendingRatings.length > 0 && !activeChatId && !showMatchOverlay && (
+        <RatingModal
+          plan={pendingRatings[0]}
+          totalPending={pendingRatings.length}
+          onSubmit={handleSubmitRating}
+          onSkip={handleSkipRating}
+        />
+      )}
 
       {/* Active Chat Screen (Full Screen Overlay) */}
       {activeChatId && activeChatData && (

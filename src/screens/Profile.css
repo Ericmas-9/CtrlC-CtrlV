@@ -93,6 +93,10 @@
   gap: 4px;
 }
 
+.stat-rating {
+  color: #f59e0b !important;
+}
+
 .stat-item p {
   font-size: 11px;
   color: var(--color-gray-500);

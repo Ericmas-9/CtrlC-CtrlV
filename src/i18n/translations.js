@@ -94,6 +94,19 @@ export const translations = {
     youLiked: 'T\'ha agradat el pla de {squad}: {plan}', userJoined: '{user} s\'ha unit al teu pla: {plan}',
     postedPlan: 'Has publicat un nou pla: {plan}', justNow: 'Ara mateix', minsAgo: 'fa 2m',
 
+    // Rating system
+    howWasIt: 'Com va anar?',
+    rateYourExperience: 'Valora la teva experiència',
+    pendingRatingsCount: '{count} plans per valorar',
+    starBad: 'Malament', starMeh: 'Regular', starOk: 'Bé', starGood: 'Molt bé', starGreat: 'Increïble!',
+    ratingCommentPlaceholder: 'Explica com va anar... (opcional)',
+    sendRating: 'Enviar valoració',
+    ratingSubmitting: 'Guardant...',
+    rateLater: 'Valorar més tard',
+    ratePlan: 'Valorar',
+    ratingSubmitted: 'Valoració enviada!',
+    noRating: 'Sense valoració',
+
     // Mock Data Translates
     sq1_meta: 'Edats 22-28 · Actius i Socials', sq1_title: 'Vòlei platja a la posta de sol i Copes', sq1_desc: 'Estem muntant una xarxa a prop de la Torre 24 a les 17h. Portem una nevera amb cerveses, tothom està convidat a unir-se per fer partits informals.',
     sq2_meta: 'Edats 24-32 · Ambient tranquil', sq2_title: 'Senderisme de Diumenge i Cafè', sq2_desc: 'Fent la ruta principal fins a l\'observatori. Ritme fàcil, bon rotllo, després anirem a buscar cafès amb gel.',
@@ -171,10 +184,23 @@ export const translations = {
     
     // Matches & Notifications
     activeSquadChats: 'SQUADCHATS ACTIVOS ({count})', noActiveChats: 'Aún no hay chats activos. ¡Ve a Descubrir!',
-    pendingRequests: 'PETICIONES PENDIENTES', noPendingRequests: 'No hay peticiones pendientes.', you: 'Tú: ',
+    pendingRequests: 'PETICIONES PENDIENTES', noPendingRequests: 'No hay peticiones pendentes.', you: 'Tú: ',
     all: 'Todos', likes: 'Me gusta', joins: 'Peticiones', noNewNotifs: 'No hay notificaciones nuevas.',
     youLiked: 'Te ha gustado el plan de {squad}: {plan}', userJoined: '{user} se ha unido a tu plan: {plan}',
     postedPlan: 'Has publicado un nuevo plan: {plan}', justNow: 'Ahora mismo', minsAgo: 'hace 2m',
+
+    // Rating system
+    howWasIt: '¿Qué tal estuvo?',
+    rateYourExperience: 'Valora tu experiencia',
+    pendingRatingsCount: '{count} planes por valorar',
+    starBad: 'Mal', starMeh: 'Regular', starOk: 'Bien', starGood: 'Muy bien', starGreat: '¡Increíble!',
+    ratingCommentPlaceholder: 'Cuéntanos cómo fue... (opcional)',
+    sendRating: 'Enviar valoración',
+    ratingSubmitting: 'Guardando...',
+    rateLater: 'Valorar más tarde',
+    ratePlan: 'Valorar',
+    ratingSubmitted: '¡Valoración enviada!',
+    noRating: 'Sin valoración',
 
     // Mock Data Translates
     sq1_meta: 'Edades 22-28 · Activos y Sociales', sq1_title: 'Vóley playa al atardecer y Copas', sq1_desc: 'Estamos montando una red cerca de la Torre 24 a las 17h. Llevamos una nevera con cervezas, todos están invitados a unirse para jugar 2v2 o 4v4.',
@@ -257,6 +283,19 @@ export const translations = {
     all: 'All', likes: 'Likes', joins: 'Joins', noNewNotifs: 'No new notifications.',
     youLiked: 'You liked {squad}\'s plan: {plan}', userJoined: '{user} joined your plan: {plan}',
     postedPlan: 'You successfully posted a new plan: {plan}', justNow: 'Just now', minsAgo: '2m ago',
+
+    // Rating system
+    howWasIt: 'How was it?',
+    rateYourExperience: 'Rate your experience',
+    pendingRatingsCount: '{count} plans to rate',
+    starBad: 'Bad', starMeh: 'Meh', starOk: 'Ok', starGood: 'Good', starGreat: 'Amazing!',
+    ratingCommentPlaceholder: 'Tell us how it went... (optional)',
+    sendRating: 'Send rating',
+    ratingSubmitting: 'Saving...',
+    rateLater: 'Rate later',
+    ratePlan: 'Rate',
+    ratingSubmitted: 'Rating submitted!',
+    noRating: 'No rating yet',
 
     // Mock Data Translates
     sq1_meta: 'Ages 22-28 · Active & Social', sq1_title: 'Sunset Beach Volleyball & Drinks', sq1_desc: 'We are setting up a net near Tower 24 at 5 PM. Bringing a cooler with some beers, everyone is welcome to join for some casual 2v2s or 4v4s.',
