@@ -7,7 +7,7 @@ import './Profile.css';
 const BUCKET = 'squad-images';
 
 
-const Profile = ({ userProfile, setUserProfile, planHistory = [], ratedPlanIds = new Set() }) => {
+const Profile = ({ userProfile, setUserProfile, planHistory = [] }) => {
   const { t } = useLanguage();
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({

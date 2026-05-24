@@ -639,7 +639,6 @@ function App() {
           userProfile={userProfile}
           setUserProfile={setUserProfile}
           planHistory={planHistory}
-          ratedPlanIds={ratedPlanIds}
         />;
       }
       case 'notifications':
