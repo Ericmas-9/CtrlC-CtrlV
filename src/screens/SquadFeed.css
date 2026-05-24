@@ -222,6 +222,34 @@
   flex-direction: column;
 }
 
+/* ── Compatibility banner ── */
+.compat-banner {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  align-self: flex-start;
+}
+
+.compat-high {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.compat-mid {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.compat-low {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
 .plan-title {
   font-size: 16px;
   font-weight: 700;

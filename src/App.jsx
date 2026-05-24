@@ -538,6 +538,7 @@ function App() {
           }
           return true;
         });
+        const likedTags = new Set(matches.flatMap(m => m.squad?.tags || []));
         return <SquadFeed
           key={feedKey}
           squads={filteredSquads}
@@ -545,6 +546,7 @@ function App() {
           onInfo={handleOpenInfo}
           usersInCity={usersInCity}
           userCity={userProfile.city}
+          likedTags={likedTags}
           onReload={async () => {
             // Increment feedKey so SquadFeed remounts completely,
             // resetting its internal currentIndex to 0 and showing fresh cards.
@@ -694,7 +696,7 @@ function App() {
                 fontWeight: 700,
                 color: 'var(--color-gray-900)',
                 marginBottom: '8px'
-              }}>Error al cargar perfil</h3>
+              }}>{t('errorLoadingProfileTitle')}</h3>
               <p style={{
                 fontSize: '14px',
                 color: 'var(--color-gray-500)',
@@ -714,7 +716,7 @@ function App() {
                   gap: '8px'
                 }}
               >
-                🔄 Reintentar
+                🔄 {t('retry')}
               </button>
             </div>
           ) : (
@@ -733,7 +735,7 @@ function App() {
                 fontSize: '15px',
                 fontWeight: 600,
                 color: 'var(--color-gray-500)'
-              }}>Cargando perfil…</p>
+              }}>{t('loadingProfile')}</p>
               <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
             </div>
           )}

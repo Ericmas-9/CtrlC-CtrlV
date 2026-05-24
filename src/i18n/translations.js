@@ -82,6 +82,11 @@ export const translations = {
     seeTranslation: 'Veure traducció', showOriginal: 'Veure original', translationUnavailable: 'Servei de traducció no disponible',
     
     // Feed & Match
+    reloadPlans: 'Actualitzar',
+    loadingProfile: 'Carregant perfil…',
+    errorLoadingProfileTitle: 'Error en carregar el perfil',
+    retry: 'Tornar a intentar',
+    couldNotLoadProfile: 'No s\'ha pogut carregar el perfil.',
     squadsNear: 'squads a prop de', members: 'membres', youAreCaughtUp: 'Ja estàs al dia!',
     seenAllSquads: 'Has vist tots els squads a prop.', shuffleRestart: 'Remenar i reiniciar',
     itsA: 'És un', squadMatch: 'SquadMatch!', bothLiked: 'Ambdós squads s\'han agradat 🎉',
@@ -177,6 +182,11 @@ export const translations = {
     seeTranslation: 'Ver traducción', showOriginal: 'Ver original', translationUnavailable: 'Servicio de traducción no disponible',
     
     // Feed & Match
+    reloadPlans: 'Recargar',
+    loadingProfile: 'Cargando perfil…',
+    errorLoadingProfileTitle: 'Error al cargar el perfil',
+    retry: 'Reintentar',
+    couldNotLoadProfile: 'No se pudo cargar el perfil.',
     squadsNear: 'squads cerca de', members: 'miembros', youAreCaughtUp: '¡Ya estás al día!',
     seenAllSquads: 'Has visto todos los squads cerca.', shuffleRestart: 'Barajar y reiniciar',
     itsA: '¡Es un', squadMatch: 'SquadMatch!', bothLiked: 'Ambos squads se han gustado 🎉',
@@ -272,6 +282,11 @@ export const translations = {
     seeTranslation: 'See translation', showOriginal: 'Show original', translationUnavailable: 'Translation service unavailable',
     
     // Feed & Match
+    reloadPlans: 'Refresh',
+    loadingProfile: 'Loading profile…',
+    errorLoadingProfileTitle: 'Error loading profile',
+    retry: 'Retry',
+    couldNotLoadProfile: 'Could not load profile.',
     squadsNear: 'squads near', members: 'members', youAreCaughtUp: 'You\'re all caught up!',
     seenAllSquads: 'You\'ve seen all the squads near.', shuffleRestart: 'Shuffle & Restart',
     itsA: 'It\'s a', squadMatch: 'SquadMatch!', bothLiked: 'Both squads liked each other 🎉',

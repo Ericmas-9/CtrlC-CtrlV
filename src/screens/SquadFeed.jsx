@@ -1,12 +1,18 @@
 import React, { useState } from 'react';
 import './SquadFeed.css';
-import { X, Heart, Info, Users, MapPin, Calendar, RefreshCw, List, Map } from 'lucide-react';
+import { X, Heart, Info, Users, MapPin, Calendar, RefreshCw, List, Map, Zap } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
 import { useUserLocation } from '../contexts/UserLocationContext';
 import { getDistance } from '../utils/distance';
 import MapView from '../components/MapView';
 
-const SquadFeed = ({ squads, onLike, onInfo, usersInCity = 0, userCity = '', onReload }) => {
+const computeCompatibility = (planTags, likedTags) => {
+  if (!planTags?.length || !likedTags?.size) return null;
+  const matched = planTags.filter(tag => likedTags.has(tag)).length;
+  return Math.round((matched / planTags.length) * 100);
+};
+
+const SquadFeed = ({ squads, onLike, onInfo, usersInCity = 0, userCity = '', onReload, likedTags = new Set() }) => {
   const { t } = useLanguage();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [swipeDirection, setSwipeDirection] = useState(null);
@@ -44,11 +50,10 @@ const SquadFeed = ({ squads, onLike, onInfo, usersInCity = 0, userCity = '', onR
       {onReload && (
         <button
           className="toggle-btn"
-          title="Recargar planes"
           onClick={async () => { await onReload?.(); setCurrentIndex(0); }}
           style={{ gap: '4px' }}
         >
-          <RefreshCw size={14} /> Recargar
+          <RefreshCw size={14} /> {t('reloadPlans')}
         </button>
       )}
     </div>
@@ -111,6 +116,11 @@ const SquadFeed = ({ squads, onLike, onInfo, usersInCity = 0, userCity = '', onR
   }
 
   const currentSquad = squads[currentIndex];
+  const compatibility = computeCompatibility(currentSquad.tags, likedTags);
+  const compatLevel = compatibility === null ? null
+    : compatibility >= 70 ? 'high'
+    : compatibility >= 40 ? 'mid'
+    : 'low';
 
   let displayDistance = currentSquad.distanceValue || '0';
   let distanceUnit = t('miles');
@@ -147,6 +157,12 @@ const SquadFeed = ({ squads, onLike, onInfo, usersInCity = 0, userCity = '', onR
           </div>
 
           <div className="card-details-section">
+            {compatLevel && (
+              <div className={`compat-banner compat-${compatLevel}`}>
+                <Zap size={13} />
+                <span>{compatibility}% compatible</span>
+              </div>
+            )}
             <h3 className="plan-title">
               <Calendar size={16} />
               {currentSquad.titleKey ? t(currentSquad.titleKey) : currentSquad.planTitle}

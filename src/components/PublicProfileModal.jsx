@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { X, MapPin } from 'lucide-react';
 import { supabase } from '../utils/supabaseClient';
+import { useLanguage } from '../i18n/LanguageContext';
 import './PublicProfileModal.css';
 
 const PublicProfileModal = ({ userId, onClose }) => {
+  const { t } = useLanguage();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -102,7 +104,7 @@ const PublicProfileModal = ({ userId, onClose }) => {
           </>
         ) : (
           <div className="pp-loading" style={{ padding: '48px 24px' }}>
-            <p style={{ color: 'var(--color-gray-400)' }}>No se pudo cargar el perfil.</p>
+            <p style={{ color: 'var(--color-gray-400)' }}>{t('couldNotLoadProfile')}</p>
           </div>
         )}
       </div>
