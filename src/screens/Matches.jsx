@@ -1,26 +1,39 @@
 import React, { useState } from 'react';
-import { MessageSquare, MapPin, Users, ClipboardList, Settings, Trash2, Check, X, Calendar, Star } from 'lucide-react';
+import { MessageSquare, MapPin, Users, ClipboardList, Settings, Trash2, Check, X, Calendar, Star, History } from 'lucide-react';
 import './Matches.css';
 import { useLanguage } from '../i18n/LanguageContext';
 
 const Matches = ({ matches, userPlans = [], onInfo, onUpdatePlan, onDeletePlan, ratedPlanIds = new Set(), onRatePlan }) => {
   const { t } = useLanguage();
-
-  // State for the settings modal
+  const [activeTab, setActiveTab] = useState('active');
   const [editingPlan, setEditingPlan] = useState(null);
   const [editDate, setEditDate] = useState('');
   const [editMaxMembers, setEditMaxMembers] = useState('');
   const [saving, setSaving] = useState(false);
 
+  const now = new Date();
+  const isActive = (p) => !p.eventDate || new Date(p.eventDate) >= now;
+  const isPast  = (p) =>  p.eventDate && new Date(p.eventDate) <  now;
+
+  const myActivePlans = userPlans.filter(isActive);
+  const myPastPlans   = userPlans.filter(isPast);
+  const activeMatches = matches.filter(m => isActive(m.squad));
+  const pastMatches   = matches.filter(m => isPast(m.squad));
+
+  // Historial: plans passats (propis + units), ordenats per data desc
+  const history = [
+    ...myPastPlans.map(p => ({ ...p, _role: 'organizer' })),
+    ...pastMatches.map(m => ({ ...m.squad, _role: 'participant' }))
+  ].sort((a, b) => new Date(b.eventDate) - new Date(a.eventDate));
+
   const formatDate = (dateStr) => {
-    if (!dateStr) return 'Sin fecha';
-    return new Date(dateStr).toLocaleString('es-ES', {
+    if (!dateStr) return '—';
+    return new Date(dateStr).toLocaleString(undefined, {
       weekday: 'short', day: 'numeric', month: 'short',
       hour: '2-digit', minute: '2-digit'
     });
   };
 
-  // Convert ISO date to datetime-local format
   const toLocalInputValue = (dateStr) => {
     if (!dateStr) return '';
     const d = new Date(dateStr);
@@ -36,9 +49,7 @@ const Matches = ({ matches, userPlans = [], onInfo, onUpdatePlan, onDeletePlan, 
     setEditMaxMembers(plan.maxMembers ?? '');
   };
 
-  const closeSettings = () => {
-    setEditingPlan(null);
-  };
+  const closeSettings = () => setEditingPlan(null);
 
   const handleSave = async () => {
     setSaving(true);
@@ -52,137 +63,170 @@ const Matches = ({ matches, userPlans = [], onInfo, onUpdatePlan, onDeletePlan, 
 
   const handleDelete = async (planId, e) => {
     e.stopPropagation();
-    if (!window.confirm('¿Seguro que quieres eliminar este plan? Esta acción no se puede deshacer.')) return;
+    if (!window.confirm(t('deletePlanConfirm'))) return;
     await onDeletePlan(planId);
   };
 
   return (
     <div className="matches-screen">
 
-      {/* ── MIS PLANES ── */}
-      <div className="matches-section">
-        <h3 className="section-label">Mis Planes ({userPlans.length})</h3>
+      {/* ── PESTANYES ── */}
+      <div className="matches-tabs">
+        <button
+          className={`matches-tab ${activeTab === 'active' ? 'matches-tab--active' : ''}`}
+          onClick={() => setActiveTab('active')}
+        >
+          {t('activePlans')}
+        </button>
+        <button
+          className={`matches-tab ${activeTab === 'history' ? 'matches-tab--active' : ''}`}
+          onClick={() => setActiveTab('history')}
+        >
+          {t('planHistory')}
+        </button>
+      </div>
 
-        {userPlans.length === 0 ? (
-          <div className="empty-state">
-            <ClipboardList size={48} color="var(--color-gray-300)" />
-            <p>Aún no has creado ningún plan activo</p>
-          </div>
-        ) : (
-          <div className="matches-list">
-            {userPlans.map(plan => (
-              <div key={plan.id} className="my-plan-card" onClick={() => onInfo && onInfo(plan)}>
-                {/* Top row: image + title + settings */}
-                <div className="my-plan-card-header">
-                  <div className="my-plan-thumb" style={{ backgroundImage: `url(${plan.image})` }} />
-                  <div className="match-item-content">
-                    <div className="match-item-header">
-                      <h4>{plan.planTitle}</h4>
-                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <span className="meta-badge">
-                          <Users size={11} /> {plan.membersCount}/{plan.maxMembers ?? '?'}
-                        </span>
-                        <button
-                          className="plan-settings-btn"
-                          onClick={(e) => openSettings(plan, e)}
-                          title="Ajustes del plan"
-                        >
-                          <Settings size={15} />
-                        </button>
-                        <button
-                          className="plan-delete-btn"
-                          onClick={(e) => handleDelete(plan.id, e)}
-                          title="Eliminar plan"
-                        >
-                          <Trash2 size={15} />
-                        </button>
-                      </div>
-                    </div>
-                    <p className="match-latest-msg">
-                      📅 {formatDate(plan.eventDate)}
-                    </p>
-                    <div className="match-meta">
-                      <span className="meta-badge"><MapPin size={12} /> {plan.location}</span>
-                      <span className="meta-badge">Edades {plan.minAge}-{plan.maxAge}</span>
-                    </div>
-                  </div>
-                </div>
+      {/* ── PLANS ACTIUS ── */}
+      {activeTab === 'active' && (
+        <>
+          {/* Els meus plans */}
+          <div className="matches-section">
+            <h3 className="section-label">{t('myPlans')} ({myActivePlans.length})</h3>
+            {myActivePlans.length === 0 ? (
+              <div className="empty-state">
+                <ClipboardList size={40} color="var(--color-gray-300)" />
+                <p>{t('noActivePlans')}</p>
               </div>
-            ))}
+            ) : (
+              <div className="matches-list">
+                {myActivePlans.map(plan => (
+                  <div key={plan.id} className="my-plan-card" onClick={() => onInfo && onInfo(plan)}>
+                    <div className="my-plan-card-header">
+                      <div className="my-plan-thumb" style={{ backgroundImage: `url(${plan.image})` }} />
+                      <div className="match-item-content">
+                        <div className="match-item-header">
+                          <h4>{plan.planTitle}</h4>
+                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                            <span className="meta-badge">
+                              <Users size={11} /> {plan.membersCount}/{plan.maxMembers ?? '?'}
+                            </span>
+                            <button className="plan-settings-btn" onClick={(e) => openSettings(plan, e)}>
+                              <Settings size={15} />
+                            </button>
+                            <button className="plan-delete-btn" onClick={(e) => handleDelete(plan.id, e)}>
+                              <Trash2 size={15} />
+                            </button>
+                          </div>
+                        </div>
+                        <p className="match-latest-msg">📅 {formatDate(plan.eventDate)}</p>
+                        <div className="match-meta">
+                          <span className="meta-badge"><MapPin size={12} /> {plan.location}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        )}
-      </div>
 
-      {/* ── OTROS PLANES (matches joined) ── */}
-      <div className="matches-section" style={{ marginTop: '24px' }}>
-        <h3 className="section-label">Otros Planes ({matches.length})</h3>
-
-        {matches.length === 0 ? (
-          <div className="empty-state">
-            <MessageSquare size={48} color="var(--color-gray-300)" />
-            <p>Aún no te has unido a ningún plan</p>
-          </div>
-        ) : (
-          <div className="matches-list">
-            {matches.map(match => {
-              const squad = match.squad;
-              const latestMsg = match.messages?.[match.messages.length - 1];
-              const isPast = squad.eventDate && new Date(squad.eventDate) < new Date();
-              const isRated = ratedPlanIds.has(squad.id);
-              return (
-                <div key={match.id} className="match-list-item" onClick={() => onInfo && onInfo(squad)}>
-                  <div className="my-plan-thumb" style={{ backgroundImage: `url(${squad.image})` }} />
-                  <div className="match-item-content">
-                    <div className="match-item-header">
-                      <h4>{squad.planTitle || squad.squadName}</h4>
-                      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                        <span className="meta-badge" style={{ fontSize: '11px' }}>
-                          <Users size={11} /> {squad.membersCount}/{squad.maxMembers ?? '?'}
-                        </span>
-                        {isPast && !isRated && (
-                          <button
-                            className="rate-plan-btn"
-                            onClick={e => { e.stopPropagation(); onRatePlan && onRatePlan(squad); }}
-                            title={t('ratePlan')}
-                          >
-                            <Star size={13} /> {t('ratePlan')}
-                          </button>
-                        )}
-                        {isPast && isRated && (
-                          <span className="rated-badge">
-                            <Star size={12} fill="currentColor" /> {t('ratingSubmitted')}
+          {/* Plans units */}
+          <div className="matches-section" style={{ marginTop: '24px' }}>
+            <h3 className="section-label">{t('plansJoined')} ({activeMatches.length})</h3>
+            {activeMatches.length === 0 ? (
+              <div className="empty-state">
+                <MessageSquare size={40} color="var(--color-gray-300)" />
+                <p>{t('noJoinedActivePlans')}</p>
+              </div>
+            ) : (
+              <div className="matches-list">
+                {activeMatches.map(match => {
+                  const squad = match.squad;
+                  return (
+                    <div key={match.id} className="match-list-item" onClick={() => onInfo && onInfo(squad)}>
+                      <div className="my-plan-thumb" style={{ backgroundImage: `url(${squad.image})` }} />
+                      <div className="match-item-content">
+                        <div className="match-item-header">
+                          <h4>{squad.planTitle || squad.squadName}</h4>
+                          <span className="meta-badge" style={{ fontSize: '11px', flexShrink: 0 }}>
+                            <Users size={11} /> {squad.membersCount}/{squad.maxMembers ?? '?'}
                           </span>
+                        </div>
+                        <p className="match-latest-msg">📅 {formatDate(squad.eventDate)}</p>
+                        <div className="match-meta">
+                          <span className="meta-badge"><MapPin size={12} /> {squad.location}</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* ── HISTORIAL ── */}
+      {activeTab === 'history' && (
+        <div className="matches-section">
+          {history.length === 0 ? (
+            <div className="empty-state">
+              <History size={40} color="var(--color-gray-300)" />
+              <p>{t('historyEmpty')}</p>
+            </div>
+          ) : (
+            <div className="matches-list">
+              {history.map((plan, idx) => {
+                const isRated = ratedPlanIds.has(plan.id);
+                return (
+                  <div key={`${plan.id}-${idx}`} className="history-plan-card" onClick={() => onInfo && onInfo(plan)}>
+                    <div className="my-plan-thumb" style={{ backgroundImage: `url(${plan.image})` }} />
+                    <div className="match-item-content">
+                      <div className="match-item-header">
+                        <h4>{plan.planTitle || plan.squadName}</h4>
+                        <span className={`role-badge role-badge--${plan._role}`}>
+                          {t(plan._role)}
+                        </span>
+                      </div>
+                      <p className="match-latest-msg">📅 {formatDate(plan.eventDate)}</p>
+                      <div className="match-meta" style={{ justifyContent: 'space-between' }}>
+                        <span className="meta-badge"><MapPin size={12} /> {plan.location}</span>
+                        {plan._role === 'participant' && (
+                          isRated ? (
+                            <span className="rated-badge">
+                              <Star size={12} fill="currentColor" /> {t('ratingSubmitted')}
+                            </span>
+                          ) : (
+                            <button
+                              className="rate-plan-btn"
+                              onClick={e => { e.stopPropagation(); onRatePlan && onRatePlan(plan); }}
+                            >
+                              <Star size={13} /> {t('ratePlan')}
+                            </button>
+                          )
                         )}
                       </div>
                     </div>
-                    {latestMsg && (
-                      <p className="match-latest-msg">
-                        {latestMsg.sender === 'us' ? 'Tú: ' : ''}{latestMsg.text}
-                      </p>
-                    )}
-                    <div className="match-meta">
-                      <span className="meta-badge"><MapPin size={12} /> {squad.location}</span>
-                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
-      {/* ── SETTINGS MODAL ── */}
+      {/* ── MODAL AJUSTOS DEL PLA ── */}
       {editingPlan && (
         <div className="plan-settings-overlay" onClick={closeSettings}>
           <div className="plan-settings-modal" onClick={e => e.stopPropagation()}>
             <div className="plan-settings-modal-header">
-              <h4>Ajustes del plan</h4>
+              <h4>{t('planSettings')}</h4>
               <button className="plan-settings-close" onClick={closeSettings}><X size={20} /></button>
             </div>
             <p className="plan-settings-name">{editingPlan.planTitle}</p>
 
             <div className="plan-settings-field">
-              <label><Calendar size={14} /> Fecha y hora</label>
+              <label><Calendar size={14} /> {t('eventDate')}</label>
               <input
                 type="datetime-local"
                 value={editDate}
@@ -191,7 +235,7 @@ const Matches = ({ matches, userPlans = [], onInfo, onUpdatePlan, onDeletePlan, 
             </div>
 
             <div className="plan-settings-field">
-              <label><Users size={14} /> Máximo de miembros</label>
+              <label><Users size={14} /> {t('maxGroupSize')}</label>
               <input
                 type="number"
                 min={editingPlan.membersCount || 1}
@@ -200,13 +244,13 @@ const Matches = ({ matches, userPlans = [], onInfo, onUpdatePlan, onDeletePlan, 
                 onChange={e => setEditMaxMembers(e.target.value)}
               />
               <span className="plan-settings-hint">
-                Ya hay {editingPlan.membersCount} persona(s) unidas — el mínimo es {editingPlan.membersCount}.
+                {editingPlan.membersCount} {t('members')} — {t('min')} {editingPlan.membersCount}
               </span>
             </div>
 
             <div className="plan-settings-actions">
               <button className="plan-settings-save" onClick={handleSave} disabled={saving}>
-                <Check size={16} /> {saving ? 'Guardando...' : 'Guardar cambios'}
+                <Check size={16} /> {saving ? t('ratingSubmitting') : t('save')}
               </button>
             </div>
           </div>

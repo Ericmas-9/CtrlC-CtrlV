@@ -16,7 +16,7 @@ const PublicProfileModal = ({ userId, onClose }) => {
       setLoading(true);
       const { data, error } = await supabase
         .from('perfiles_usuario')
-        .select('full_name, photo_url, age, city, bio, rating, plans_hosted, plans_joined')
+        .select('full_name, photo_url, age, city, bio, plans_hosted, plans_joined')
         .eq('id', userId)
         .single();
 
@@ -30,17 +30,6 @@ const PublicProfileModal = ({ userId, onClose }) => {
 
     fetchProfile();
   }, [userId]);
-
-  const renderStars = (rating) => {
-    const stars = [];
-    const rounded = Math.round(rating * 2) / 2; // round to nearest 0.5
-    for (let i = 1; i <= 5; i++) {
-      stars.push(
-        <span key={i} className={`pp-star ${i <= rounded ? '' : 'empty'}`}>★</span>
-      );
-    }
-    return stars;
-  };
 
   return (
     <div className="public-profile-overlay" onClick={onClose}>
@@ -67,7 +56,7 @@ const PublicProfileModal = ({ userId, onClose }) => {
               </div>
               <h2 className="pp-name">{profile.full_name}</h2>
               <p className="pp-headline">
-                {profile.age && <span>{profile.age} años</span>}
+                {profile.age && <span>{profile.age} {t('years')}</span>}
                 {profile.age && profile.city && <span>·</span>}
                 {profile.city && (
                   <>
@@ -76,28 +65,22 @@ const PublicProfileModal = ({ userId, onClose }) => {
                   </>
                 )}
               </p>
-              {profile.rating > 0 && (
-                <div className="pp-rating">
-                  {renderStars(profile.rating)}
-                  <span className="pp-rating-value">{profile.rating.toFixed(1)}</span>
-                </div>
-              )}
             </div>
 
             <div className="pp-stats-row">
               <div className="pp-stat">
                 <span className="pp-stat-value">{profile.plans_hosted ?? 0}</span>
-                <span className="pp-stat-label">Creados</span>
+                <span className="pp-stat-label">{t('plansCreated')}</span>
               </div>
               <div className="pp-stat">
                 <span className="pp-stat-value">{profile.plans_joined ?? 0}</span>
-                <span className="pp-stat-label">Unidos</span>
+                <span className="pp-stat-label">{t('plansJoinedShort')}</span>
               </div>
             </div>
 
             {profile.bio && (
               <div className="pp-body">
-                <p className="pp-bio-label">Sobre mí</p>
+                <p className="pp-bio-label">{t('aboutMe')}</p>
                 <p className="pp-bio-text">{profile.bio}</p>
               </div>
             )}

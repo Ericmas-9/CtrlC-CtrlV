@@ -93,8 +93,83 @@
   gap: 4px;
 }
 
-.stat-rating {
-  color: #f59e0b !important;
+/* ── Historial al perfil ── */
+.profile-history-card {
+  background-color: white;
+  border-radius: 20px;
+  padding: 24px 20px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+}
+
+.profile-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.profile-history-item {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.profile-history-thumb {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  background-size: cover;
+  background-position: center;
+  flex-shrink: 0;
+}
+
+.profile-history-info {
+  flex: 1;
+  overflow: hidden;
+}
+
+.profile-history-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-gray-900);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 2px;
+}
+
+.profile-history-date {
+  font-size: 12px;
+  color: var(--color-gray-500);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.profile-history-empty {
+  font-size: 13px;
+  color: var(--color-gray-400);
+  text-align: center;
+  padding: 16px 0 4px;
+}
+
+/* Role badges (compartits amb Matches) */
+.role-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.role-badge--organizer {
+  background: rgba(139, 92, 246, 0.12);
+  color: #7c3aed;
+}
+
+.role-badge--participant {
+  background: rgba(0, 210, 200, 0.1);
+  color: var(--color-turquoise-dark);
 }
 
 .stat-item p {

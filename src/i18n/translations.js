@@ -95,7 +95,8 @@ export const translations = {
     // Matches & Notifications
     activeSquadChats: 'SQUADCHATS ACTIUS ({count})', noActiveChats: 'Encara no hi ha xats actius. Vés a Descobrir i comença a lliscar!',
     pendingRequests: 'PETICIONS PENDENTS', noPendingRequests: 'No hi ha peticions pendents.', you: 'Tu: ',
-    all: 'Tots', likes: 'M\'agrada', joins: 'Peticions', noNewNotifs: 'No hi ha notificacions noves.',
+    all: 'Tots', likes: 'M\'agrada', joins: 'Peticions', messages: 'Missatges', noNewNotifs: 'No hi ha notificacions noves.',
+    notifNewMessage: '{sender} · {plan}: "{text}"',
     youLiked: 'T\'ha agradat el pla de {squad}: {plan}', userJoined: '{user} s\'ha unit al teu pla: {plan}',
     postedPlan: 'Has publicat un nou pla: {plan}', justNow: 'Ara mateix', minsAgo: 'fa 2m',
 
@@ -111,6 +112,24 @@ export const translations = {
     ratePlan: 'Valorar',
     ratingSubmitted: 'Valoració enviada!',
     noRating: 'Sense valoració',
+
+    // Plans actius / Historial
+    activePlans: 'Plans actius',
+    myPlans: 'Els meus plans',
+    historyEmpty: 'Encara no hi ha plans passats',
+    recentActivity: 'Activitat recent',
+    noRecentActivity: 'Encara no has participat en cap pla passat',
+    organizer: 'Organitzador',
+    participant: 'Participant',
+    noActivePlans: 'Encara no has creat cap pla actiu',
+    noJoinedActivePlans: 'Encara no t\'has unit a cap pla actiu',
+    planSettings: 'Ajustos del pla',
+    eventDate: 'Data i hora',
+    deletePlanConfirm: 'Segur que vols eliminar aquest pla? Aquesta acció no es pot desfer.',
+    years: 'anys',
+    aboutMe: 'Sobre mi',
+    plansCreated: 'Creats',
+    plansJoinedShort: 'Units',
 
     // Mock Data Translates
     sq1_meta: 'Edats 22-28 · Actius i Socials', sq1_title: 'Vòlei platja a la posta de sol i Copes', sq1_desc: 'Estem muntant una xarxa a prop de la Torre 24 a les 17h. Portem una nevera amb cerveses, tothom està convidat a unir-se per fer partits informals.',
@@ -195,7 +214,8 @@ export const translations = {
     // Matches & Notifications
     activeSquadChats: 'SQUADCHATS ACTIVOS ({count})', noActiveChats: 'Aún no hay chats activos. ¡Ve a Descubrir!',
     pendingRequests: 'PETICIONES PENDIENTES', noPendingRequests: 'No hay peticiones pendentes.', you: 'Tú: ',
-    all: 'Todos', likes: 'Me gusta', joins: 'Peticiones', noNewNotifs: 'No hay notificaciones nuevas.',
+    all: 'Todos', likes: 'Me gusta', joins: 'Peticiones', messages: 'Mensajes', noNewNotifs: 'No hay notificaciones nuevas.',
+    notifNewMessage: '{sender} · {plan}: "{text}"',
     youLiked: 'Te ha gustado el plan de {squad}: {plan}', userJoined: '{user} se ha unido a tu plan: {plan}',
     postedPlan: 'Has publicado un nuevo plan: {plan}', justNow: 'Ahora mismo', minsAgo: 'hace 2m',
 
@@ -211,6 +231,24 @@ export const translations = {
     ratePlan: 'Valorar',
     ratingSubmitted: '¡Valoración enviada!',
     noRating: 'Sin valoración',
+
+    // Plans actius / Historial
+    activePlans: 'Planes activos',
+    myPlans: 'Mis planes',
+    historyEmpty: 'Aún no hay planes pasados',
+    recentActivity: 'Actividad reciente',
+    noRecentActivity: 'Aún no has participado en ningún plan pasado',
+    organizer: 'Organizador',
+    participant: 'Participante',
+    noActivePlans: 'Aún no has creado ningún plan activo',
+    noJoinedActivePlans: 'Aún no te has unido a ningún plan activo',
+    planSettings: 'Ajustes del plan',
+    eventDate: 'Fecha y hora',
+    deletePlanConfirm: '¿Seguro que quieres eliminar este plan? Esta acción no se puede deshacer.',
+    years: 'años',
+    aboutMe: 'Sobre mí',
+    plansCreated: 'Creados',
+    plansJoinedShort: 'Unidos',
 
     // Mock Data Translates
     sq1_meta: 'Edades 22-28 · Activos y Sociales', sq1_title: 'Vóley playa al atardecer y Copas', sq1_desc: 'Estamos montando una red cerca de la Torre 24 a las 17h. Llevamos una nevera con cervezas, todos están invitados a unirse para jugar 2v2 o 4v4.',
@@ -295,7 +333,8 @@ export const translations = {
     // Matches & Notifications
     activeSquadChats: 'ACTIVE SQUADCHATS ({count})', noActiveChats: 'No active chats yet. Go to Discover and start swiping!',
     pendingRequests: 'PENDING REQUESTS', noPendingRequests: 'No pending requests.', you: 'You: ',
-    all: 'All', likes: 'Likes', joins: 'Joins', noNewNotifs: 'No new notifications.',
+    all: 'All', likes: 'Likes', joins: 'Joins', messages: 'Messages', noNewNotifs: 'No new notifications.',
+    notifNewMessage: '{sender} · {plan}: "{text}"',
     youLiked: 'You liked {squad}\'s plan: {plan}', userJoined: '{user} joined your plan: {plan}',
     postedPlan: 'You successfully posted a new plan: {plan}', justNow: 'Just now', minsAgo: '2m ago',
 
@@ -311,6 +350,24 @@ export const translations = {
     ratePlan: 'Rate',
     ratingSubmitted: 'Rating submitted!',
     noRating: 'No rating yet',
+
+    // Plans actius / Historial
+    activePlans: 'Active Plans',
+    myPlans: 'My Plans',
+    historyEmpty: 'No past plans yet',
+    recentActivity: 'Recent Activity',
+    noRecentActivity: 'You haven\'t participated in any past plans yet',
+    organizer: 'Organizer',
+    participant: 'Participant',
+    noActivePlans: 'No active plans created yet',
+    noJoinedActivePlans: 'You haven\'t joined any active plans yet',
+    planSettings: 'Plan settings',
+    eventDate: 'Date & time',
+    deletePlanConfirm: 'Are you sure you want to delete this plan? This cannot be undone.',
+    years: 'years',
+    aboutMe: 'About me',
+    plansCreated: 'Created',
+    plansJoinedShort: 'Joined',
 
     // Mock Data Translates
     sq1_meta: 'Ages 22-28 · Active & Social', sq1_title: 'Sunset Beach Volleyball & Drinks', sq1_desc: 'We are setting up a net near Tower 24 at 5 PM. Bringing a cooler with some beers, everyone is welcome to join for some casual 2v2s or 4v4s.',

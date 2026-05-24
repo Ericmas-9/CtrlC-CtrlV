@@ -109,6 +109,10 @@
   background-color: var(--color-amber);
 }
 
+.notif-icon-badge.message {
+  background-color: #6366f1;
+}
+
 .notif-content {
   flex: 1;
 }

@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Camera, User as UserIcon, Loader } from 'lucide-react';
+import { Camera, User as UserIcon, Loader, MapPin } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
 import { supabase } from '../utils/supabaseClient';
 import './Profile.css';
@@ -7,7 +7,7 @@ import './Profile.css';
 const BUCKET = 'squad-images';
 
 
-const Profile = ({ userProfile, setUserProfile }) => {
+const Profile = ({ userProfile, setUserProfile, planHistory = [], ratedPlanIds = new Set() }) => {
   const { t } = useLanguage();
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({
@@ -17,6 +17,13 @@ const Profile = ({ userProfile, setUserProfile }) => {
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const fileInputRef = useRef(null);
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '—';
+    return new Date(dateStr).toLocaleDateString(undefined, {
+      day: 'numeric', month: 'short', year: 'numeric'
+    });
+  };
 
   // ── Avatar Upload ────────────────────────────────────────────────────────────
   const handleAvatarChange = async (e) => {
@@ -190,14 +197,6 @@ const Profile = ({ userProfile, setUserProfile }) => {
             <h4>{userProfile.plansJoined ?? 0}</h4>
             <p>{t('plansJoined')}</p>
           </div>
-          <div className="stat-item">
-            <h4 className="stat-rating">
-              {userProfile.rating > 0
-                ? <>&#9733; {Number(userProfile.rating).toFixed(1)}</>
-                : '—'}
-            </h4>
-            <p>{t('rating')}</p>
-          </div>
         </div>
       </div>
 
@@ -227,6 +226,31 @@ const Profile = ({ userProfile, setUserProfile }) => {
           <p className="detail-label">{t('bioLabel')}</p>
           <p className="detail-value-text">{userProfile.bio}</p>
         </div>
+      </div>
+
+      <div className="profile-history-card">
+        <h3 className="section-label" style={{ marginBottom: '16px' }}>{t('recentActivity')}</h3>
+        {planHistory.length === 0 ? (
+          <p className="profile-history-empty">{t('noRecentActivity')}</p>
+        ) : (
+          <div className="profile-history-list">
+            {planHistory.map((plan, idx) => (
+              <div key={`${plan.id}-${idx}`} className="profile-history-item">
+                <div className="profile-history-thumb" style={{ backgroundImage: `url(${plan.image})` }} />
+                <div className="profile-history-info">
+                  <p className="profile-history-title">{plan.planTitle}</p>
+                  <p className="profile-history-date">
+                    <MapPin size={11} /> {plan.location}
+                  </p>
+                  <p className="profile-history-date">📅 {formatDate(plan.eventDate)}</p>
+                </div>
+                <span className={`role-badge role-badge--${plan.role}`}>
+                  {t(plan.role)}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

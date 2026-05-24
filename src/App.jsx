@@ -143,6 +143,12 @@ function App() {
       
       setSession(session);
       if (session) {
+        try {
+          const savedNotifs = localStorage.getItem(`squadup_notifs_${session.user.id}`);
+          if (savedNotifs) setNotifications(JSON.parse(savedNotifs));
+          const lastSeen = localStorage.getItem(`squadup_lastseen_${session.user.id}`);
+          if (lastSeen) setLastSeenNotifTime(lastSeen);
+        } catch (e) { /* ignore corrupt data */ }
         fetchUserProfile(session.user.id, session.user.email);
         const fetchedSquads = await fetchPlans();
         if (fetchedSquads) {
@@ -235,6 +241,7 @@ function App() {
   const [matches, setMatches] = useState([]);
   const [joinedPlanIds, setJoinedPlanIds] = useState(new Set());
   const [notifications, setNotifications] = useState([]);
+  const [lastSeenNotifTime, setLastSeenNotifTime] = useState(null);
   // feedKey forces SquadFeed to remount (resetting its internal currentIndex)
   // every time the user hits Recargar, so new cards are visible immediately.
   const [feedKey, setFeedKey] = useState(0);
@@ -297,40 +304,8 @@ function App() {
       return;
     }
 
-    // Mark as rated locally
     setRatedPlanIds(prev => new Set([...prev, plan.id]));
     setPendingRatings(prev => prev.filter(p => p.id !== plan.id));
-
-    // Recompute creator's average rating
-    try {
-      const { data: creatorPlans } = await supabase
-        .from('planes')
-        .select('id')
-        .eq('creator_id', plan.creatorId);
-
-      if (creatorPlans?.length) {
-        const { data: allRatings } = await supabase
-          .from('plan_ratings')
-          .select('stars')
-          .in('plan_id', creatorPlans.map(p => p.id));
-
-        if (allRatings?.length) {
-          const avg = allRatings.reduce((sum, r) => sum + r.stars, 0) / allRatings.length;
-          const rounded = Math.round(avg * 10) / 10;
-          await supabase
-            .from('perfiles_usuario')
-            .update({ rating: rounded })
-            .eq('id', plan.creatorId);
-
-          // If the creator is the logged-in user, update local profile too
-          if (plan.creatorId === session.user.id) {
-            setUserProfile(prev => ({ ...prev, rating: rounded }));
-          }
-        }
-      }
-    } catch (err) {
-      console.error('Error updating creator rating:', err);
-    }
   };
 
   const handleSkipRating = (planId) => {
@@ -359,10 +334,10 @@ function App() {
       id: Date.now().toString(),
       type: 'like',
       text: t('youLiked', { squad: squad.squadName, plan: squad.titleKey ? t(squad.titleKey) : squad.planTitle }),
-      time: t('justNow'),
+      time: new Date().toISOString(),
       avatar: squad.leaderAvatar
     };
-    setNotifications(prev => [newNotif, ...prev]);
+    setNotifications(prev => [newNotif, ...prev].slice(0, 50));
 
     // Build the optimistic match entry.
     // STRICT SEPARATION: never add a match for a plan the current user created —
@@ -479,9 +454,9 @@ function App() {
       id: Date.now().toString(),
       type: 'create',
       text: t('postedPlan', { plan: newPlan.planTitle }),
-      time: t('justNow'),
+      time: new Date().toISOString(),
       avatar: userProfile.photo
-    }, ...prev]);
+    }, ...prev].slice(0, 50));
   };
 
   const handleOpenInfo = (squad) => {
@@ -519,6 +494,76 @@ function App() {
     }
     await fetchPlans();
   };
+
+  // ── Refs per evitar closures obsoletes a la subscripció de missatges ──
+  const joinedPlanIdsRef = React.useRef(joinedPlanIds);
+  React.useEffect(() => { joinedPlanIdsRef.current = joinedPlanIds; }, [joinedPlanIds]);
+  const squadsRef = React.useRef(squads);
+  React.useEffect(() => { squadsRef.current = squads; }, [squads]);
+  const activeChatDataRef = React.useRef(activeChatData);
+  React.useEffect(() => { activeChatDataRef.current = activeChatData; }, [activeChatData]);
+  const sessionRef = React.useRef(session);
+  React.useEffect(() => { sessionRef.current = session; }, [session]);
+
+  // ── Persistir notificacions a localStorage ──
+  React.useEffect(() => {
+    if (!session?.user?.id || notifications.length === 0) return;
+    try {
+      localStorage.setItem(`squadup_notifs_${session.user.id}`, JSON.stringify(notifications.slice(0, 50)));
+    } catch (e) { /* ignore */ }
+  }, [notifications, session?.user?.id]);
+
+  // ── Subscripció a nous missatges de xat → notificació ──
+  React.useEffect(() => {
+    if (!session?.user?.id) return;
+    const channel = supabase
+      .channel('message-notifs')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'mensajes_chat' },
+        async (payload) => {
+          const msg = payload.new;
+          const s = sessionRef.current;
+          if (!s?.user?.id || msg.sender_id === s.user.id) return;
+          const currentSquads = squadsRef.current;
+          const currentJoined = joinedPlanIdsRef.current;
+          const isJoined = currentJoined.has(msg.plan_id);
+          const isCreator = currentSquads.some(sq => sq.id === msg.plan_id && sq.creatorId === s.user.id);
+          if (!isJoined && !isCreator) return;
+          if (activeChatDataRef.current?.squad?.id === msg.plan_id) return;
+
+          const { data: sender } = await supabase
+            .from('perfiles_usuario').select('full_name, photo_url').eq('id', msg.sender_id).single();
+          const plan = currentSquads.find(sq => sq.id === msg.plan_id);
+          const msgPreview = msg.text.length > 40 ? msg.text.slice(0, 40) + '…' : msg.text;
+
+          setNotifications(prev => [{
+            id: `msg-${msg.id}`,
+            type: 'message',
+            text: `${sender?.full_name || '?'} · ${plan?.planTitle || '?'}: "${msgPreview}"`,
+            time: new Date().toISOString(),
+            avatar: sender?.photo_url || 'https://via.placeholder.com/150',
+          }, ...prev].slice(0, 50));
+        })
+      .subscribe();
+    return () => supabase.removeChannel(channel);
+  }, [session?.user?.id]);
+
+  // ── Obrir notificacions i netejar el badge ──
+  const handleOpenNotifications = () => {
+    setCurrentTab('notifications');
+    const now = new Date().toISOString();
+    setLastSeenNotifTime(now);
+    if (session?.user?.id) {
+      localStorage.setItem(`squadup_lastseen_${session.user.id}`, now);
+    }
+  };
+
+  // ── Nombre de notificacions no llegides (per al badge) ──
+  const unreadCount = React.useMemo(() => {
+    if (!lastSeenNotifTime) return notifications.length;
+    return notifications.filter(n =>
+      !n.time?.includes?.('T') || n.time > lastSeenNotifTime
+    ).length;
+  }, [notifications, lastSeenNotifTime]);
 
   // --- RENDER LOGIC ---
   const renderScreen = () => {
@@ -562,16 +607,8 @@ function App() {
       case 'create':
         return <CreatePlan onCreate={handleCreatePlan} userProfile={userProfile} />;
       case 'matches': {
-        const userPlans = squads.filter(s => {
-          if (s.creatorId !== userProfile.id) return false;
-          if (!s.eventDate) return true;
-          return new Date(s.eventDate) > new Date();
-        });
-        // SAFETY NET: even if a stale match slipped into state,
-        // guarantee own plans never render in "Otros Planes".
-        const otherMatches = matches.filter(
-          m => m.squad?.creatorId !== userProfile.id
-        );
+        const allUserPlans = squads.filter(s => s.creatorId === userProfile.id);
+        const otherMatches = matches.filter(m => m.squad?.creatorId !== userProfile.id);
         return <Matches
           matches={otherMatches}
           onOpenChat={(id) => {
@@ -579,7 +616,7 @@ function App() {
             setActiveChatId(id);
             setActiveChatData(found);
           }}
-          userPlans={userPlans}
+          userPlans={allUserPlans}
           onInfo={handleOpenInfo}
           onUpdatePlan={handleUpdatePlan}
           onDeletePlan={handleDeletePlan}
@@ -587,8 +624,24 @@ function App() {
           onRatePlan={handleRatePlanFromMatches}
         />;
       }
-      case 'profile':
-        return <Profile userProfile={userProfile} setUserProfile={setUserProfile} />;
+      case 'profile': {
+        const now = new Date();
+        const pastHosted = squads
+          .filter(s => s.creatorId === userProfile.id && s.eventDate && new Date(s.eventDate) < now)
+          .map(s => ({ ...s, role: 'organizer' }));
+        const pastJoined = matches
+          .filter(m => m.squad?.creatorId !== userProfile.id && m.squad?.eventDate && new Date(m.squad.eventDate) < now)
+          .map(m => ({ ...m.squad, role: 'participant' }));
+        const planHistory = [...pastHosted, ...pastJoined]
+          .sort((a, b) => new Date(b.eventDate) - new Date(a.eventDate))
+          .slice(0, 5);
+        return <Profile
+          userProfile={userProfile}
+          setUserProfile={setUserProfile}
+          planHistory={planHistory}
+          ratedPlanIds={ratedPlanIds}
+        />;
+      }
       case 'notifications':
         return <Notifications notifications={notifications} onClose={() => setCurrentTab('discover')} />;
       case 'settings':
@@ -753,9 +806,9 @@ function App() {
         <TopBar 
           title={getTopBarTitle()} 
           subtitle={getTopBarSubtitle()}
-          onOpenNotifications={() => setCurrentTab('notifications')}
+          onOpenNotifications={handleOpenNotifications}
           onOpenSettings={() => setCurrentTab('settings')}
-          hasNotifications={notifications.length > 0}
+          hasNotifications={unreadCount > 0}
         />
       )}
       

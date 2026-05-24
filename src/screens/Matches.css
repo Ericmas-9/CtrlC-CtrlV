@@ -316,6 +316,72 @@
   cursor: not-allowed;
 }
 
+/* ── Pestanyes ── */
+.matches-tabs {
+  display: flex;
+  background: white;
+  border-radius: 16px;
+  padding: 4px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.matches-tab {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-gray-500);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.matches-tab--active {
+  background: linear-gradient(135deg, var(--color-turquoise), #00a896);
+  color: white;
+}
+
+/* ── Historial card ── */
+.history-plan-card {
+  background-color: white;
+  border-radius: 20px;
+  padding: 16px;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.history-plan-card:active {
+  transform: scale(0.98);
+}
+
+/* ── Role badges ── */
+.role-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.role-badge--organizer {
+  background: rgba(139, 92, 246, 0.12);
+  color: #7c3aed;
+}
+
+.role-badge--participant {
+  background: rgba(0, 210, 200, 0.1);
+  color: var(--color-turquoise-dark);
+}
+
 /* ── Rate plan button (in Otros Planes list) ── */
 .rate-plan-btn {
   display: flex;
