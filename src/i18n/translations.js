@@ -90,7 +90,7 @@ export const translations = {
     squadsNear: 'squads a prop de', members: 'membres', youAreCaughtUp: 'Ja estàs al dia!',
     seenAllSquads: 'Has vist tots els squads a prop.', shuffleRestart: 'Remenar i reiniciar',
     itsA: 'És un', squadMatch: 'SquadMatch!', bothLiked: 'Ambdós squads s\'han agradat 🎉',
-    yourSquad: 'El teu squad', openSquadChat: 'Obrir SquadChat', keepSwiping: 'Continuar lliscant',
+    yourSquad: 'El teu squad', openSquadChat: 'Obrir SquadChat', keepSwiping: 'Continuar lliscant', viewMembers: 'Veure membres',
     
     // Matches & Notifications
     activeSquadChats: 'SQUADCHATS ACTIUS ({count})', noActiveChats: 'Encara no hi ha xats actius. Vés a Descobrir i comença a lliscar!',
@@ -209,7 +209,7 @@ export const translations = {
     squadsNear: 'squads cerca de', members: 'miembros', youAreCaughtUp: '¡Ya estás al día!',
     seenAllSquads: 'Has visto todos los squads cerca.', shuffleRestart: 'Barajar y reiniciar',
     itsA: '¡Es un', squadMatch: 'SquadMatch!', bothLiked: 'Ambos squads se han gustado 🎉',
-    yourSquad: 'Tu squad', openSquadChat: 'Abrir SquadChat', keepSwiping: 'Seguir deslizando',
+    yourSquad: 'Tu squad', openSquadChat: 'Abrir SquadChat', keepSwiping: 'Seguir deslizando', viewMembers: 'Ver miembros',
     
     // Matches & Notifications
     activeSquadChats: 'SQUADCHATS ACTIVOS ({count})', noActiveChats: 'Aún no hay chats activos. ¡Ve a Descubrir!',
@@ -328,7 +328,7 @@ export const translations = {
     squadsNear: 'squads near', members: 'members', youAreCaughtUp: 'You\'re all caught up!',
     seenAllSquads: 'You\'ve seen all the squads near.', shuffleRestart: 'Shuffle & Restart',
     itsA: 'It\'s a', squadMatch: 'SquadMatch!', bothLiked: 'Both squads liked each other 🎉',
-    yourSquad: 'Your Squad', openSquadChat: 'Open SquadChat', keepSwiping: 'Keep Swiping',
+    yourSquad: 'Your Squad', openSquadChat: 'Open SquadChat', keepSwiping: 'Keep Swiping', viewMembers: 'View members',
     
     // Matches & Notifications
     activeSquadChats: 'ACTIVE SQUADCHATS ({count})', noActiveChats: 'No active chats yet. Go to Discover and start swiping!',

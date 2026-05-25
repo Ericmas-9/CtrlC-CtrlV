@@ -4,8 +4,10 @@ import { Send, Image as ImageIcon, ChevronLeft, Users } from 'lucide-react';
 import { supabase } from '../utils/supabaseClient';
 import PublicProfileModal from '../components/PublicProfileModal';
 import PlanMembersPanel from '../components/PlanMembersPanel';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const SquadChat = ({ matchData, userProfile, onBack }) => {
+  const { t } = useLanguage();
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
   const [profileUserId, setProfileUserId] = useState(null);
@@ -152,13 +154,13 @@ const SquadChat = ({ matchData, userProfile, onBack }) => {
           <ChevronLeft size={24} />
         </button>
         <div className="chat-header-info">
-          <h2 className="chat-title">{matchData.squad.squadName} + Your Squad</h2>
-          <p className="chat-subtitle">{matchData.squad.membersCount + 1} members · Active now</p>
+          <h2 className="chat-title">{matchData.squad.squadName} + {t('yourSquad')}</h2>
+          <p className="chat-subtitle">{matchData.squad.membersCount} {t('members')}</p>
         </div>
         <button
           className="icon-btn-ghost view-members-btn"
           onClick={() => setShowMembers(true)}
-          title="Ver miembros"
+          title={t('viewMembers')}
         >
           <Users size={20} />
         </button>
