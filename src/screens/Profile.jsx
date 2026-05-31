@@ -16,6 +16,8 @@ const Profile = ({ userProfile, setUserProfile, planHistory = [] }) => {
   });
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [avatarError, setAvatarError] = useState(null);
+  const [saveError, setSaveError] = useState(null);
   const fileInputRef = useRef(null);
 
   const formatDate = (dateStr) => {
@@ -61,7 +63,7 @@ const Profile = ({ userProfile, setUserProfile, planHistory = [] }) => {
       setEditForm(prev => ({ ...prev, photo: publicUrl }));
     } catch (err) {
       console.error('Avatar upload failed:', err);
-      alert('No se pudo subir la foto. Inténtalo de nuevo.');
+      setAvatarError(t('avatarUploadFailed'));
     } finally {
       setIsUploadingAvatar(false);
       // Reset input so re-selecting the same file triggers onChange again
@@ -89,7 +91,7 @@ const Profile = ({ userProfile, setUserProfile, planHistory = [] }) => {
 
       if (error) {
         console.error('Error updating profile:', error);
-        alert('Hubo un problema actualizando tu perfil.');
+        setSaveError(t('profileUpdateFailed'));
       }
     }
     setIsSaving(false);
@@ -124,14 +126,13 @@ const Profile = ({ userProfile, setUserProfile, planHistory = [] }) => {
         id="avatar-file-input"
       />
 
-      {/* Visible camera button triggers the hidden input */}
       <label
         htmlFor="avatar-file-input"
         className={`camera-btn ${isUploadingAvatar ? 'camera-btn--disabled' : ''}`}
-        title="Change photo"
       >
         <Camera size={16} color="white" />
       </label>
+      {avatarError && <p className="form-error-msg" style={{ marginTop: '8px', textAlign: 'center' }}>{avatarError}</p>}
     </div>
   );
 
@@ -146,6 +147,8 @@ const Profile = ({ userProfile, setUserProfile, planHistory = [] }) => {
             {isSaving ? <Loader size={14} className="btn-spinner" /> : t('save')}
           </button>
         </div>
+
+        {saveError && <p className="form-error-msg" style={{ margin: '8px 16px 0' }}>{saveError}</p>}
 
         {/* Avatar uploader inside edit mode too */}
         <div style={{ display: 'flex', justifyContent: 'center', paddingTop: '8px' }}>

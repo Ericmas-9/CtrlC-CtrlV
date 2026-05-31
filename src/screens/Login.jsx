@@ -1,43 +1,48 @@
 import React, { useState } from 'react';
 import { Mail, Lock, EyeOff, Eye, Zap } from 'lucide-react';
 import { supabase } from '../utils/supabaseClient';
+import { useLanguage } from '../i18n/LanguageContext';
 import './Login.css';
 
 function Login({ onNavigateToRegister }) {
+  const { t } = useLanguage();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [errorState, setErrorState] = useState(false);
+  const [formMessage, setFormMessage] = useState(null);
+  const [formMessageType, setFormMessageType] = useState('error');
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     setErrorState(false);
-    
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    setFormMessage(null);
+
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
       setErrorState(true);
+      setFormMessage(t('loginError'));
+      setFormMessageType('error');
     }
     setLoading(false);
   };
 
   const handleForgotPassword = async () => {
-    const emailToRecover = window.prompt("Please enter your email address to recover your password:", email);
+    const emailToRecover = window.prompt(t('forgotPassword'), email);
     if (!emailToRecover) return;
-    
+
     const { error } = await supabase.auth.resetPasswordForEmail(emailToRecover);
     if (error) {
-      alert("Error: " + error.message);
+      setFormMessage(t('passwordRecoveryError'));
+      setFormMessageType('error');
     } else {
-      alert("Password recovery email sent!");
+      setFormMessage(t('recoveryEmailSent'));
+      setFormMessageType('success');
     }
   };
-
 
   return (
     <div className="auth-container">
@@ -45,18 +50,18 @@ function Login({ onNavigateToRegister }) {
         <div className="logo-box">
           <Zap size={28} color="#fff" fill="#ffb703" strokeWidth={1} />
         </div>
-        <h1 className="auth-title">Welcome Back</h1>
-        <p className="auth-subtitle">Log in to continue</p>
+        <h1 className="auth-title">{t('welcomeBack')}</h1>
+        <p className="auth-subtitle">{t('loginSubtitle')}</p>
       </div>
 
       <form className="auth-form" onSubmit={handleLogin}>
         <div className="input-group">
-          <label>Email Address</label>
+          <label>{t('emailLabel')}</label>
           <div className={`input-wrapper ${errorState ? 'error' : ''}`}>
             <Mail className="input-icon" size={20} />
-            <input 
-              type="email" 
-              placeholder="you@example.com" 
+            <input
+              type="email"
+              placeholder="tu@exemple.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -65,18 +70,18 @@ function Login({ onNavigateToRegister }) {
         </div>
 
         <div className="input-group">
-          <label>Password</label>
+          <label>{t('passwordLabel')}</label>
           <div className={`input-wrapper ${errorState ? 'error' : ''}`}>
             <Lock className="input-icon" size={20} />
-            <input 
-              type={showPassword ? 'text' : 'password'} 
-              placeholder="Enter your password" 
+            <input
+              type={showPassword ? 'text' : 'password'}
+              placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
             />
-            <button 
-              type="button" 
+            <button
+              type="button"
               className="toggle-password"
               onClick={() => setShowPassword(!showPassword)}
             >
@@ -85,18 +90,21 @@ function Login({ onNavigateToRegister }) {
           </div>
         </div>
 
+        {formMessage && (
+          <p className={`form-${formMessageType}-msg`}>{formMessage}</p>
+        )}
+
         <div className="forgot-password-link">
-          <button type="button" onClick={handleForgotPassword}>Forgot Password?</button>
+          <button type="button" onClick={handleForgotPassword}>{t('forgotPassword')}</button>
         </div>
 
         <button type="submit" className="primary-btn" disabled={loading}>
-          {loading ? 'Logging In...' : 'Log In'}
+          {loading ? t('loggingIn') : t('logIn')}
         </button>
       </form>
 
-
       <div className="auth-footer">
-        <p>Don&apos;t have an account? <button type="button" className="link-btn" onClick={onNavigateToRegister}>Sign Up</button></p>
+        <p>{t('noAccount')} <button type="button" className="link-btn" onClick={onNavigateToRegister}>{t('signUp')}</button></p>
       </div>
     </div>
   );

@@ -90,7 +90,7 @@ const PlanDetailsModal = ({ squad, onClose, onJoin, isJoined, onOpenChat }) => {
 
         <div className="modal-content">
           <div className="modal-squad-info">
-            <button className="clickable-creator-avatar" onClick={handleCreatorClick} title="Ver perfil del creador">
+            <button className="clickable-creator-avatar" onClick={handleCreatorClick} title={t('viewCreatorProfile')}>
               <img src={squad.leaderAvatar} alt="Leader" className="modal-leader-avatar" />
             </button>
             <div>
@@ -113,7 +113,7 @@ const PlanDetailsModal = ({ squad, onClose, onJoin, isJoined, onOpenChat }) => {
               style={{ width: '100%', padding: '14px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', marginBottom: '8px' }}
             >
               <MessageSquare size={20} />
-              Abrir Chat
+              {t('openChat')}
             </button>
           )}
 
@@ -123,7 +123,7 @@ const PlanDetailsModal = ({ squad, onClose, onJoin, isJoined, onOpenChat }) => {
               onClick={() => setShowMembers(true)}
             >
               <Users size={16} />
-              Ver miembros
+              {t('viewMembers')}
             </button>
           )}
 

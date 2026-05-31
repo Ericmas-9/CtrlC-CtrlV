@@ -133,8 +133,10 @@ const SquadChat = ({ matchData, userProfile, onBack }) => {
 
     if (error) {
       console.error('Error sending message:', error);
-      // Revert optimistic update
-      setMessages(prev => prev.filter(m => m.id !== tempId));
+      // Mark message as failed instead of silently removing it
+      setMessages(prev => prev.map(m =>
+        m.id === tempId ? { ...m, failed: true } : m
+      ));
     } else {
       // Replace temp ID with real DB ID
       setMessages(prev => prev.map(m => m.id === tempId ? { ...m, id: data.id } : m));
@@ -167,12 +169,12 @@ const SquadChat = ({ matchData, userProfile, onBack }) => {
       </div>
 
       <div className="chat-messages">
-        <div className="chat-date-separator">Today</div>
-        
+        <div className="chat-date-separator">{t('today')}</div>
+
         {messages.length === 0 ? (
           <div className="empty-chat-state" style={{ textAlign: 'center', marginTop: '40px', color: 'var(--color-gray-400)' }}>
-            <p>No hay mensajes aún.</p>
-            <p>¡Sé el primero en saludar!</p>
+            <p>{t('noMessages')}</p>
+            <p>{t('beFirstToGreet')}</p>
           </div>
         ) : (
           messages.map((msg, idx) => {
@@ -187,7 +189,7 @@ const SquadChat = ({ matchData, userProfile, onBack }) => {
                       <button
                         className="clickable-avatar"
                         onClick={() => handleAvatarClick(msg)}
-                        title={`Ver perfil de ${msg.user}`}
+                        title={t('viewCreatorProfile')}
                       >
                         <img src={msg.avatar} alt={msg.user} />
                       </button>
@@ -204,8 +206,9 @@ const SquadChat = ({ matchData, userProfile, onBack }) => {
                       {msg.user}
                     </button>
                   )}
-                  <div className={`message-bubble ${isUs ? 'bubble-us' : 'bubble-them'}`}>
+                  <div className={`message-bubble ${isUs ? 'bubble-us' : 'bubble-them'} ${msg.failed ? 'bubble-failed' : ''}`}>
                     {msg.text}
+                    {msg.failed && <span className="bubble-error-icon">⚠️</span>}
                   </div>
                 </div>
                 
@@ -224,10 +227,10 @@ const SquadChat = ({ matchData, userProfile, onBack }) => {
         <button type="button" className="attach-btn">
           <ImageIcon size={20} color="var(--color-gray-500)" />
         </button>
-        <input 
-          type="text" 
-          className="chat-input" 
-          placeholder="Message the squads..." 
+        <input
+          type="text"
+          className="chat-input"
+          placeholder={t('messagePlaceholder')}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
         />

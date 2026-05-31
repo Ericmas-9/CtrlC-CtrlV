@@ -407,6 +407,100 @@
   transform: scale(0.95);
 }
 
+/* ── Direct chat button on joined plan cards ── */
+.chat-direct-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  background: linear-gradient(135deg, var(--color-turquoise), #00a896);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  box-shadow: 0 2px 8px rgba(0, 210, 200, 0.3);
+}
+
+.chat-direct-btn:hover {
+  transform: scale(1.1);
+}
+
+.chat-direct-btn:active {
+  transform: scale(0.93);
+}
+
+/* ── Gallery button (historial) ── */
+.gallery-plan-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  background: #f0f9ff;
+  color: #0284c7;
+  border: 1.5px solid #bae6fd;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.gallery-plan-btn:hover {
+  background: #e0f2fe;
+}
+
+.gallery-plan-btn:active {
+  transform: scale(0.95);
+}
+
+/* ── Recover (undo pass) button ── */
+.recover-plan-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  background: #faf5ff;
+  color: #7c3aed;
+  border: 1.5px solid #ddd6fe;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.recover-plan-btn:hover {
+  background: #ede9fe;
+}
+
+.recover-plan-btn:active {
+  transform: scale(0.95);
+}
+
+/* ── Skipped count badge on tab ── */
+.skipped-count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.35);
+  color: inherit;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 0 5px;
+  margin-left: 4px;
+  min-width: 16px;
+  height: 16px;
+}
+
+.matches-tab--active .skipped-count-badge {
+  background: rgba(255,255,255,0.3);
+}
+
 .rated-badge {
   display: flex;
   align-items: center;

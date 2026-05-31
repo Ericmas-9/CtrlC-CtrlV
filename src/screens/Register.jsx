@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, User, Mail, Lock, EyeOff, Eye, MapPin, Calendar, FileText } from 'lucide-react';
 import { supabase } from '../utils/supabaseClient';
+import { useLanguage } from '../i18n/LanguageContext';
 import './Register.css';
 
 function Register({ onNavigateToLogin }) {
+  const { t } = useLanguage();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -15,6 +17,7 @@ function Register({ onNavigateToLogin }) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [formError, setFormError] = useState(null);
 
   // City autocomplete
   const [cityInput, setCityInput] = useState('');
@@ -54,56 +57,48 @@ function Register({ onNavigateToLogin }) {
     setShowCitySuggestions(false);
   };
 
-
   const handleRegister = async (e) => {
     e.preventDefault();
+    setFormError(null);
+
     if (password !== confirmPassword) {
-      alert("Passwords do not match!");
+      setFormError(t('passwordMismatch'));
       return;
     }
     if (!agreedToTerms) {
-      alert("Please agree to the Terms and Conditions");
+      setFormError(t('agreeToTermsError'));
       return;
     }
 
     setLoading(true);
-    
-    // Create the user in Supabase Auth
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
+
+    const { data, error } = await supabase.auth.signUp({ email, password });
 
     if (error) {
-      alert("Error: " + error.message);
+      setFormError(t('registerAuthError'));
       setLoading(false);
       return;
     }
 
     if (data && data.user) {
-      // Insert into perfiles_usuario
       const { error: dbError } = await supabase
         .from('perfiles_usuario')
-        .upsert([
-          { 
-            id: data.user.id,
-            full_name: fullName, 
-            email: email,
-            age: age ? parseInt(age) : null,
-            city: city,
-            bio: bio
-          }
-        ]);
+        .upsert([{
+          id: data.user.id,
+          full_name: fullName,
+          email: email,
+          age: age ? parseInt(age) : null,
+          city: city,
+          bio: bio
+        }]);
 
       if (dbError) {
-        console.error("Error inserting into perfiles_usuario:", dbError);
-        alert(`Ocurrió un error guardando los datos de tu perfil:\n\n${dbError.message}\n${dbError.details || ''}\n${dbError.hint || ''}\n\nPodrás editarlos luego en tu Perfil.`);
+        console.error('Error inserting into perfiles_usuario:', dbError);
+        setFormError(t('profileSaveWarning'));
       }
     }
 
     setLoading(false);
-    // User might need to confirm email depending on Supabase settings. 
-    // If auto-login is on, App.jsx will catch the session change.
   };
 
   return (
@@ -115,18 +110,18 @@ function Register({ onNavigateToLogin }) {
       </div>
 
       <div className="auth-header left-align">
-        <h1 className="auth-title">Create Account</h1>
-        <p className="auth-subtitle">Fill in the details to get started</p>
+        <h1 className="auth-title">{t('createAccount')}</h1>
+        <p className="auth-subtitle">{t('registerSubtitle')}</p>
       </div>
 
       <form className="auth-form" onSubmit={handleRegister}>
         <div className="input-group">
-          <label>Full Name</label>
+          <label>{t('fullNameLabel')}</label>
           <div className="input-wrapper">
             <User className="input-icon" size={20} />
-            <input 
-              type="text" 
-              placeholder="John Doe" 
+            <input
+              type="text"
+              placeholder="Joan Garcia"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               required
@@ -135,12 +130,12 @@ function Register({ onNavigateToLogin }) {
         </div>
 
         <div className="input-group">
-          <label>Email Address</label>
+          <label>{t('emailLabel')}</label>
           <div className="input-wrapper">
             <Mail className="input-icon" size={20} />
-            <input 
-              type="email" 
-              placeholder="you@example.com" 
+            <input
+              type="email"
+              placeholder="tu@exemple.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -149,12 +144,12 @@ function Register({ onNavigateToLogin }) {
         </div>
 
         <div className="input-group">
-          <label>Age</label>
+          <label>{t('ageLabel')}</label>
           <div className="input-wrapper">
             <Calendar className="input-icon" size={20} />
-            <input 
-              type="number" 
-              placeholder="Your age" 
+            <input
+              type="number"
+              placeholder="25"
               value={age}
               onChange={(e) => setAge(e.target.value)}
               required
@@ -163,12 +158,12 @@ function Register({ onNavigateToLogin }) {
         </div>
 
         <div className="input-group" style={{ position: 'relative' }}>
-          <label>City</label>
+          <label>{t('locationLabel')}</label>
           <div className="input-wrapper">
             <MapPin className="input-icon" size={20} />
-            <input 
-              type="text" 
-              placeholder="e.g. Barcelona" 
+            <input
+              type="text"
+              placeholder="Barcelona"
               value={cityInput}
               onChange={(e) => {
                 setCityInput(e.target.value);
@@ -198,11 +193,11 @@ function Register({ onNavigateToLogin }) {
         </div>
 
         <div className="input-group">
-          <label>Bio</label>
+          <label>{t('bioLabel')}</label>
           <div className="input-wrapper textarea-wrapper">
             <FileText className="input-icon" size={20} style={{ alignSelf: 'flex-start', marginTop: '14px' }} />
-            <textarea 
-              placeholder="Tell us about yourself..." 
+            <textarea
+              placeholder="..."
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               rows="3"
@@ -210,68 +205,61 @@ function Register({ onNavigateToLogin }) {
           </div>
         </div>
 
-
         <div className="input-group">
-          <label>Password</label>
+          <label>{t('passwordLabel')}</label>
           <div className="input-wrapper">
             <Lock className="input-icon" size={20} />
-            <input 
-              type={showPassword ? 'text' : 'password'} 
-              placeholder="Create a password" 
+            <input
+              type={showPassword ? 'text' : 'password'}
+              placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
             />
-            <button 
-              type="button" 
-              className="toggle-password"
-              onClick={() => setShowPassword(!showPassword)}
-            >
+            <button type="button" className="toggle-password" onClick={() => setShowPassword(!showPassword)}>
               {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
             </button>
           </div>
         </div>
 
         <div className="input-group">
-          <label>Confirm Password</label>
+          <label>{t('confirmPasswordLabel')}</label>
           <div className="input-wrapper">
             <Lock className="input-icon" size={20} />
-            <input 
-              type={showConfirmPassword ? 'text' : 'password'} 
-              placeholder="Re-enter your password" 
+            <input
+              type={showConfirmPassword ? 'text' : 'password'}
+              placeholder="••••••••"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
             />
-            <button 
-              type="button" 
-              className="toggle-password"
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            >
+            <button type="button" className="toggle-password" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
               {showConfirmPassword ? <Eye size={20} /> : <EyeOff size={20} />}
             </button>
           </div>
         </div>
 
         <div className="terms-checkbox">
-          <input 
-            type="checkbox" 
-            id="terms" 
+          <input
+            type="checkbox"
+            id="terms"
             checked={agreedToTerms}
             onChange={(e) => setAgreedToTerms(e.target.checked)}
           />
           <label htmlFor="terms">
-            I agree to the <a href="#">Terms and Conditions</a>
+            {t('termsLabel')}
           </label>
         </div>
 
+        {formError && <p className="form-error-msg">{formError}</p>}
+
         <button type="submit" className="primary-btn" disabled={loading}>
-          {loading ? 'Creating Account...' : 'Create Account'}
+          {loading ? t('creatingAccount') : t('createAccount')}
         </button>
       </form>
 
       <div className="auth-footer">
-        <p>Already have an account? <button type="button" className="link-btn" onClick={onNavigateToLogin}>Log In</button></p>
+        <p>{t('haveAccount')} <button type="button" className="link-btn" onClick={onNavigateToLogin}>{t('logIn')}</button></p>
       </div>
     </div>
   );

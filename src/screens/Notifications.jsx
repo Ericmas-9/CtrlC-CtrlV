@@ -31,8 +31,9 @@ const Notifications = ({ notifications, onClose }) => {
   });
 
   const NotifIcon = ({ type }) => {
-    if (type === 'like')    return <Heart       size={10} fill="white" />;
-    if (type === 'message') return <MessageSquare size={10} color="white" />;
+    if (type === 'like')     return <Heart         size={10} fill="white" />;
+    if (type === 'message')  return <MessageSquare size={10} color="white" />;
+    if (type === 'reminder') return <span style={{ fontSize: '10px', lineHeight: 1 }}>⏰</span>;
     return <PlusCircle size={10} color="white" />;
   };
 

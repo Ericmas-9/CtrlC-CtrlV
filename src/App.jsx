@@ -11,6 +11,7 @@ import Matches from './screens/Matches';
 import Notifications from './screens/Notifications';
 import PlanDetailsModal from './components/PlanDetailsModal';
 import RatingModal from './components/RatingModal';
+import EventGalleryModal from './components/EventGalleryModal';
 import Settings from './screens/Settings';
 import StatusBar from './components/StatusBar';
 import { useLanguage } from './i18n/LanguageContext';
@@ -148,12 +149,15 @@ function App() {
           if (savedNotifs) setNotifications(JSON.parse(savedNotifs));
           const lastSeen = localStorage.getItem(`squadup_lastseen_${session.user.id}`);
           if (lastSeen) setLastSeenNotifTime(lastSeen);
+          const savedPassed = localStorage.getItem(`squadup_passed_${session.user.id}`);
+          if (savedPassed) setPassedPlanIds(new Set(JSON.parse(savedPassed)));
         } catch (e) { /* ignore corrupt data */ }
         fetchUserProfile(session.user.id, session.user.email);
         const fetchedSquads = await fetchPlans();
         if (fetchedSquads) {
-          fetchJoinedPlans(session.user.id, fetchedSquads);
+          const joinedIds = await fetchJoinedPlans(session.user.id, fetchedSquads);
           fetchPendingRatings(session.user.id);
+          if (joinedIds) checkEventReminders(session.user.id, fetchedSquads, joinedIds);
         }
       }
       if (event === 'PASSWORD_RECOVERY') {
@@ -232,6 +236,7 @@ function App() {
     }).filter(Boolean);
 
     setMatches(userMatches);
+    return joinedIds;
   };
 
   // --- GLOBAL STATE ---
@@ -245,6 +250,12 @@ function App() {
   // feedKey forces SquadFeed to remount (resetting its internal currentIndex)
   // every time the user hits Recargar, so new cards are visible immediately.
   const [feedKey, setFeedKey] = useState(0);
+
+  // --- SWIPE HISTORY STATE ---
+  const [passedPlanIds, setPassedPlanIds] = useState(new Set());
+
+  // --- GALLERY STATE ---
+  const [galleryPlan, setGalleryPlan] = useState(null);
 
   // --- RATING STATE ---
   const [pendingRatings, setPendingRatings] = useState([]); // plans to rate (modal queue)
@@ -322,6 +333,67 @@ function App() {
       creatorId: squad.creatorId,
     };
     setPendingRatings(prev => [planForRating, ...prev.filter(p => p.id !== squad.id)]);
+  };
+
+  // --- SWIPE HISTORY HANDLERS ---
+  const handlePass = (squad) => {
+    if (!squad?.id || !session?.user?.id) return;
+    setPassedPlanIds(prev => {
+      const next = new Set([...prev, squad.id]);
+      try {
+        localStorage.setItem(`squadup_passed_${session.user.id}`, JSON.stringify([...next]));
+      } catch (e) { /* ignore */ }
+      return next;
+    });
+  };
+
+  const handleUndoPass = (planId) => {
+    setPassedPlanIds(prev => {
+      const next = new Set(prev);
+      next.delete(planId);
+      try {
+        localStorage.setItem(`squadup_passed_${session.user.id}`, JSON.stringify([...next]));
+      } catch (e) { /* ignore */ }
+      return next;
+    });
+  };
+
+  // --- EVENT REMINDERS ---
+  const checkEventReminders = (userId, plans, joinedIds) => {
+    const now = new Date();
+    const in24h = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    let reminded = [];
+    try {
+      reminded = JSON.parse(localStorage.getItem(`squadup_reminded_${userId}`) || '[]');
+    } catch (e) { /* ignore */ }
+    const remindedSet = new Set(reminded);
+
+    const toRemind = plans.filter(p => {
+      if (!p.eventDate || !joinedIds.has(p.id)) return false;
+      const d = new Date(p.eventDate);
+      return d > now && d <= in24h && !remindedSet.has(p.id);
+    });
+
+    if (toRemind.length === 0) return;
+
+    const newNotifs = toRemind.map(p => {
+      const hoursLeft = Math.max(1, Math.round((new Date(p.eventDate) - now) / 3600000));
+      return {
+        id: `reminder-${p.id}`,
+        type: 'reminder',
+        text: t('eventReminder', { plan: p.planTitle, hours: hoursLeft }),
+        time: new Date().toISOString(),
+        avatar: p.image
+      };
+    });
+
+    setNotifications(prev => [...newNotifs, ...prev].slice(0, 50));
+    try {
+      localStorage.setItem(
+        `squadup_reminded_${userId}`,
+        JSON.stringify([...remindedSet, ...toRemind.map(p => p.id)])
+      );
+    } catch (e) { /* ignore */ }
   };
 
   // --- HANDLERS ---
@@ -405,7 +477,7 @@ function App() {
 
   const handleCreatePlan = async (newPlan) => {
     // Save plan to Supabase
-    const { error } = await supabase
+    const { data: createdPlan, error } = await supabase
       .from('planes')
       .insert([{
         creator_id: userProfile.id,
@@ -431,6 +503,13 @@ function App() {
       console.error('Error saving plan:', error);
       alert('Error al guardar el plan: ' + error.message);
       return;
+    }
+
+    // Insert creator into plan_members so RLS allows them to send chat messages
+    if (createdPlan?.id) {
+      await supabase
+        .from('plan_members')
+        .insert([{ plan_id: createdPlan.id, user_id: userProfile.id }]);
     }
 
     // Refresh plans from DB
@@ -572,8 +651,10 @@ function App() {
         const filteredSquads = squads.filter(s => {
           // Don't show the user's own plans
           if (s.creatorId === userProfile.id) return false;
-          // BUG FIX: Don't show plans the user has already joined
+          // Don't show plans the user has already joined
           if (joinedPlanIds.has(s.id)) return false;
+          // Don't show plans the user passed (swiped left)
+          if (passedPlanIds.has(s.id)) return false;
           // Don't show full plans
           if (s.maxMembers && s.membersCount >= s.maxMembers) return false;
           // Don't show plans outside the user's age range
@@ -588,6 +669,7 @@ function App() {
           key={feedKey}
           squads={filteredSquads}
           onLike={handleLike}
+          onPass={handlePass}
           onInfo={handleOpenInfo}
           usersInCity={usersInCity}
           userCity={userProfile.city}
@@ -609,6 +691,7 @@ function App() {
       case 'matches': {
         const allUserPlans = squads.filter(s => s.creatorId === userProfile.id);
         const otherMatches = matches.filter(m => m.squad?.creatorId !== userProfile.id);
+        const passedSquads = squads.filter(s => passedPlanIds.has(s.id));
         return <Matches
           matches={otherMatches}
           onOpenChat={(id) => {
@@ -622,6 +705,9 @@ function App() {
           onDeletePlan={handleDeletePlan}
           ratedPlanIds={ratedPlanIds}
           onRatePlan={handleRatePlanFromMatches}
+          passedSquads={passedSquads}
+          onUndoPass={handleUndoPass}
+          onOpenGallery={setGalleryPlan}
         />;
       }
       case 'profile': {
@@ -885,6 +971,15 @@ function App() {
           totalPending={pendingRatings.length}
           onSubmit={handleSubmitRating}
           onSkip={handleSkipRating}
+        />
+      )}
+
+      {/* Event Gallery Modal */}
+      {galleryPlan && (
+        <EventGalleryModal
+          plan={galleryPlan}
+          userProfile={userProfile}
+          onClose={() => setGalleryPlan(null)}
         />
       )}
 

@@ -12,7 +12,7 @@ const computeCompatibility = (planTags, likedTags) => {
   return Math.round((matched / planTags.length) * 100);
 };
 
-const SquadFeed = ({ squads, onLike, onInfo, usersInCity = 0, userCity = '', onReload, likedTags = new Set() }) => {
+const SquadFeed = ({ squads, onLike, onPass, onInfo, usersInCity = 0, userCity = '', onReload, likedTags = new Set() }) => {
   const { t } = useLanguage();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [swipeDirection, setSwipeDirection] = useState(null);
@@ -20,6 +20,7 @@ const SquadFeed = ({ squads, onLike, onInfo, usersInCity = 0, userCity = '', onR
   const { userLocation } = useUserLocation();
 
   const handlePass = () => {
+    onPass?.(squads[currentIndex]);
     setSwipeDirection('left');
     setTimeout(() => {
       setCurrentIndex(prev => prev + 1);
@@ -64,7 +65,7 @@ const SquadFeed = ({ squads, onLike, onInfo, usersInCity = 0, userCity = '', onR
     return (
       <div key="map-view" className="squad-feed fade-in" style={{ padding: 0 }}>
         <div className="feed-header" style={{ padding: '12px 16px' }}>
-          <p>{usersInCity} {usersInCity === 1 ? 'usuario' : 'usuarios'} en <strong>{userCity}</strong></p>
+          <p>{usersInCity} {usersInCity === 1 ? t('userSingular') : t('userPlural')} a <strong>{userCity}</strong></p>
           <ViewToggle />
         </div>
         <div style={{ width: '100%', height: '480px' }}>
@@ -92,7 +93,7 @@ const SquadFeed = ({ squads, onLike, onInfo, usersInCity = 0, userCity = '', onR
     return (
       <div key="empty-view" className="squad-feed empty-feed fade-in">
         <div className="feed-header">
-          <p>{usersInCity} {usersInCity === 1 ? 'usuario' : 'usuarios'} en <strong>{userCity}</strong></p>
+          <p>{usersInCity} {usersInCity === 1 ? t('userSingular') : t('userPlural')} a <strong>{userCity}</strong></p>
           <ViewToggle />
         </div>
         <div className="empty-state-content">
@@ -134,7 +135,7 @@ const SquadFeed = ({ squads, onLike, onInfo, usersInCity = 0, userCity = '', onR
   return (
     <div key="list-view" className="squad-feed fade-in">
       <div className="feed-header">
-        <p>{usersInCity} {usersInCity === 1 ? 'usuario' : 'usuarios'} en <strong>{userCity}</strong></p>
+        <p>{usersInCity} {usersInCity === 1 ? t('userSingular') : t('userPlural')} a <strong>{userCity}</strong></p>
         <ViewToggle />
       </div>
 

@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { MessageSquare, MapPin, Users, ClipboardList, Settings, Trash2, Check, X, Calendar, Star, History } from 'lucide-react';
+import { MessageSquare, MapPin, Users, ClipboardList, Settings, Trash2, Check, X, Calendar, Star, History, RotateCcw, GalleryHorizontal, MessageCircle } from 'lucide-react';
 import './Matches.css';
 import { useLanguage } from '../i18n/LanguageContext';
 
-const Matches = ({ matches, userPlans = [], onInfo, onUpdatePlan, onDeletePlan, ratedPlanIds = new Set(), onRatePlan }) => {
+const Matches = ({ matches, userPlans = [], onInfo, onUpdatePlan, onDeletePlan, ratedPlanIds = new Set(), onRatePlan, passedSquads = [], onUndoPass, onOpenGallery }) => {
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState('active');
   const [editingPlan, setEditingPlan] = useState(null);
@@ -55,7 +55,7 @@ const Matches = ({ matches, userPlans = [], onInfo, onUpdatePlan, onDeletePlan, 
     setSaving(true);
     await onUpdatePlan(editingPlan.id, {
       eventDate: editDate ? new Date(editDate).toISOString() : null,
-      maxMembers: parseInt(editMaxMembers) || null,
+      maxMembers: editMaxMembers !== '' ? (parseInt(editMaxMembers) || null) : null,
     });
     setSaving(false);
     setEditingPlan(null);
@@ -83,6 +83,15 @@ const Matches = ({ matches, userPlans = [], onInfo, onUpdatePlan, onDeletePlan, 
           onClick={() => setActiveTab('history')}
         >
           {t('planHistory')}
+        </button>
+        <button
+          className={`matches-tab ${activeTab === 'skipped' ? 'matches-tab--active' : ''}`}
+          onClick={() => setActiveTab('skipped')}
+        >
+          {t('skippedPlans')}
+          {passedSquads.length > 0 && (
+            <span className="skipped-count-badge">{passedSquads.length}</span>
+          )}
         </button>
       </div>
 
@@ -148,9 +157,18 @@ const Matches = ({ matches, userPlans = [], onInfo, onUpdatePlan, onDeletePlan, 
                       <div className="match-item-content">
                         <div className="match-item-header">
                           <h4>{squad.planTitle || squad.squadName}</h4>
-                          <span className="meta-badge" style={{ fontSize: '11px', flexShrink: 0 }}>
-                            <Users size={11} /> {squad.membersCount}/{squad.maxMembers ?? '?'}
-                          </span>
+                          <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexShrink: 0 }}>
+                            <span className="meta-badge">
+                              <Users size={11} /> {squad.membersCount}/{squad.maxMembers ?? '?'}
+                            </span>
+                            <button
+                              className="chat-direct-btn"
+                              onClick={e => { e.stopPropagation(); onOpenChat && onOpenChat(match.id); }}
+                              title={t('openChat')}
+                            >
+                              <MessageCircle size={15} />
+                            </button>
+                          </div>
                         </div>
                         <p className="match-latest-msg">📅 {formatDate(squad.eventDate)}</p>
                         <div className="match-meta">
@@ -191,25 +209,69 @@ const Matches = ({ matches, userPlans = [], onInfo, onUpdatePlan, onDeletePlan, 
                       <p className="match-latest-msg">📅 {formatDate(plan.eventDate)}</p>
                       <div className="match-meta" style={{ justifyContent: 'space-between' }}>
                         <span className="meta-badge"><MapPin size={12} /> {plan.location}</span>
-                        {plan._role === 'participant' && (
-                          isRated ? (
-                            <span className="rated-badge">
-                              <Star size={12} fill="currentColor" /> {t('ratingSubmitted')}
-                            </span>
-                          ) : (
-                            <button
-                              className="rate-plan-btn"
-                              onClick={e => { e.stopPropagation(); onRatePlan && onRatePlan(plan); }}
-                            >
-                              <Star size={13} /> {t('ratePlan')}
-                            </button>
-                          )
-                        )}
+                        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                          <button
+                            className="gallery-plan-btn"
+                            onClick={e => { e.stopPropagation(); onOpenGallery && onOpenGallery(plan); }}
+                            title={t('viewGallery')}
+                          >
+                            <GalleryHorizontal size={12} /> {t('photos')}
+                          </button>
+                          {plan._role === 'participant' && (
+                            isRated ? (
+                              <span className="rated-badge">
+                                <Star size={12} fill="currentColor" /> {t('ratingSubmitted')}
+                              </span>
+                            ) : (
+                              <button
+                                className="rate-plan-btn"
+                                onClick={e => { e.stopPropagation(); onRatePlan && onRatePlan(plan); }}
+                              >
+                                <Star size={13} /> {t('ratePlan')}
+                              </button>
+                            )
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
                 );
               })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── PLANS REBUTJATS / RECHAZADOS ── */}
+      {activeTab === 'skipped' && (
+        <div className="matches-section">
+          {passedSquads.length === 0 ? (
+            <div className="empty-state">
+              <RotateCcw size={40} color="var(--color-gray-300)" />
+              <p>{t('skippedEmpty')}</p>
+            </div>
+          ) : (
+            <div className="matches-list">
+              {passedSquads.map(plan => (
+                <div key={plan.id} className="history-plan-card" onClick={() => onInfo && onInfo(plan)}>
+                  <div className="my-plan-thumb" style={{ backgroundImage: `url(${plan.image})` }} />
+                  <div className="match-item-content">
+                    <div className="match-item-header">
+                      <h4>{plan.planTitle || plan.squadName}</h4>
+                    </div>
+                    <p className="match-latest-msg">📅 {formatDate(plan.eventDate)}</p>
+                    <div className="match-meta" style={{ justifyContent: 'space-between' }}>
+                      <span className="meta-badge"><MapPin size={12} /> {plan.location}</span>
+                      <button
+                        className="recover-plan-btn"
+                        onClick={e => { e.stopPropagation(); onUndoPass && onUndoPass(plan.id); }}
+                      >
+                        <RotateCcw size={12} /> {t('recoverPlan')}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>

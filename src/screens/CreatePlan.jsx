@@ -39,6 +39,7 @@ const CreatePlan = ({ onCreate, userProfile }) => {
   const [planImagePreview, setPlanImagePreview] = useState(null); // local blob URL for preview
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formError, setFormError] = useState(null);
   const planImageInputRef = useRef(null);
 
   const availableTags = ['Sports ⚽', 'Drinking 🍺', 'Music 🎵', 'Outdoors 🌲', 'Chill ☕', 'Beach 🌊', 'Hiking 🥾', 'Padel 🎾', 'Gaming 🎮'];
@@ -147,7 +148,8 @@ const CreatePlan = ({ onCreate, userProfile }) => {
     // Validate creator age against plan range
     const creatorAge = parseInt(userProfile.age);
     if (creatorAge && (creatorAge < parseInt(minAge) || creatorAge > parseInt(maxAge))) {
-      alert(`Tu edad (${creatorAge}) debe estar dentro del rango de edad del plan (${minAge}-${maxAge}).`);
+      setFormError(t('ageValidationError', { age: creatorAge, min: minAge, max: maxAge }));
+      setIsSubmitting(false);
       return;
     }
 
@@ -174,7 +176,7 @@ const CreatePlan = ({ onCreate, userProfile }) => {
         finalImageUrl = urlData.publicUrl;
       } catch (err) {
         console.error('Plan image upload failed:', err);
-        alert('No se pudo subir la imagen. Se usará una imagen por defecto.');
+        setFormError(t('imageUploadFailed'));
         finalImageUrl = DEFAULT_PLAN_IMAGE;
       } finally {
         setIsUploadingImage(false);
@@ -255,7 +257,7 @@ const CreatePlan = ({ onCreate, userProfile }) => {
           </div>
 
           <div className="input-group">
-            <label>Fecha y hora del evento</label>
+            <label>{t('eventDate')}</label>
             <input
               type="datetime-local"
               value={eventDate}
@@ -267,7 +269,7 @@ const CreatePlan = ({ onCreate, userProfile }) => {
 
           {/* ── Plan Image Uploader ── */}
           <div className="input-group">
-            <label>Plan Image</label>
+            <label>{t('planImageLabel')}</label>
             <input
               ref={planImageInputRef}
               type="file"
@@ -293,14 +295,14 @@ const CreatePlan = ({ onCreate, userProfile }) => {
                   <X size={14} />
                 </button>
                 <label htmlFor="plan-image-input" className="plan-image-change-btn">
-                  Change
+                  {t('changePlanImage')}
                 </label>
               </div>
             ) : (
               <label htmlFor="plan-image-input" className="plan-image-upload-btn">
                 <ImagePlus size={20} />
-                <span>Upload Plan Photo</span>
-                <span className="plan-image-hint">Optional · Falls back to default</span>
+                <span>{t('uploadPlanPhoto')}</span>
+                <span className="plan-image-hint">{t('photoOptionalHint')}</span>
               </label>
             )}
           </div>
@@ -411,6 +413,9 @@ const CreatePlan = ({ onCreate, userProfile }) => {
         </div>
 
         <div className="form-actions">
+          {formError && (
+            <p className="form-error-msg">{formError}</p>
+          )}
           <button
             type="submit"
             className="submit-plan-btn"
@@ -419,7 +424,7 @@ const CreatePlan = ({ onCreate, userProfile }) => {
             {isLoading ? (
               <span className="submit-loading">
                 <Loader size={18} className="btn-spinner" />
-                {isUploadingImage ? 'Uploading image...' : 'Publishing...'}
+                {isUploadingImage ? t('uploadingImage') : t('publishing')}
               </span>
             ) : (
               t('postSquadPlan')

@@ -1,35 +1,39 @@
 import React, { useState } from 'react';
 import { Lock, EyeOff, Eye, Zap } from 'lucide-react';
 import { supabase } from '../utils/supabaseClient';
+import { useLanguage } from '../i18n/LanguageContext';
 import './UpdatePassword.css';
 
 function UpdatePassword({ onPasswordUpdated }) {
+  const { t } = useLanguage();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [formError, setFormError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
 
   const handleUpdatePassword = async (e) => {
     e.preventDefault();
+    setFormError(null);
+
     if (password !== confirmPassword) {
-      alert("Passwords do not match!");
+      setFormError(t('passwordMismatch'));
       return;
     }
 
     setLoading(true);
-    
-    const { error } = await supabase.auth.updateUser({
-      password: password
-    });
+
+    const { error } = await supabase.auth.updateUser({ password });
 
     if (error) {
-      alert("Error: " + error.message);
+      setFormError(error.message);
       setLoading(false);
     } else {
-      alert("Password updated successfully!");
+      setSuccessMessage(t('passwordUpdatedSuccess'));
       setLoading(false);
-      onPasswordUpdated();
+      setTimeout(() => onPasswordUpdated(), 1500);
     }
   };
 
@@ -39,55 +43,50 @@ function UpdatePassword({ onPasswordUpdated }) {
         <div className="logo-box">
           <Zap size={28} color="#fff" fill="#ffb703" strokeWidth={1} />
         </div>
-        <h1 className="auth-title">Update Password</h1>
-        <p className="auth-subtitle">Enter your new password</p>
+        <h1 className="auth-title">{t('updatePasswordTitle')}</h1>
+        <p className="auth-subtitle">{t('updatePasswordSubtitle')}</p>
       </div>
 
       <form className="auth-form" onSubmit={handleUpdatePassword}>
         <div className="input-group">
-          <label>New Password</label>
+          <label>{t('newPasswordLabel')}</label>
           <div className="input-wrapper">
             <Lock className="input-icon" size={20} />
-            <input 
-              type={showPassword ? 'text' : 'password'} 
-              placeholder="Enter new password" 
+            <input
+              type={showPassword ? 'text' : 'password'}
+              placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
             />
-            <button 
-              type="button" 
-              className="toggle-password"
-              onClick={() => setShowPassword(!showPassword)}
-            >
+            <button type="button" className="toggle-password" onClick={() => setShowPassword(!showPassword)}>
               {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
             </button>
           </div>
         </div>
 
         <div className="input-group">
-          <label>Confirm New Password</label>
+          <label>{t('confirmNewPasswordLabel')}</label>
           <div className="input-wrapper">
             <Lock className="input-icon" size={20} />
-            <input 
-              type={showConfirmPassword ? 'text' : 'password'} 
-              placeholder="Confirm new password" 
+            <input
+              type={showConfirmPassword ? 'text' : 'password'}
+              placeholder="••••••••"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
             />
-            <button 
-              type="button" 
-              className="toggle-password"
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            >
+            <button type="button" className="toggle-password" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
               {showConfirmPassword ? <Eye size={20} /> : <EyeOff size={20} />}
             </button>
           </div>
         </div>
 
+        {formError && <p className="form-error-msg">{formError}</p>}
+        {successMessage && <p className="form-success-msg">{successMessage}</p>}
+
         <button type="submit" className="primary-btn" disabled={loading}>
-          {loading ? 'Updating...' : 'Update Password'}
+          {loading ? t('updating') : t('updatePasswordTitle')}
         </button>
       </form>
     </div>

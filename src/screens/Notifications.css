@@ -113,6 +113,10 @@
   background-color: #6366f1;
 }
 
+.notif-icon-badge.reminder {
+  background-color: #f59e0b;
+}
+
 .notif-content {
   flex: 1;
 }
