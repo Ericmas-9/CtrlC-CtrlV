@@ -1,5 +1,6 @@
 .squad-feed {
   flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   padding: 0 16px;
@@ -74,15 +75,19 @@
 .card-stack {
   position: relative;
   flex: 1;
+  min-height: 0;
+  overflow: hidden;
   display: flex;
-  justify-content: center;
-  align-items: flex-start;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
   margin-bottom: 20px;
 }
 
 .squad-card {
   width: 100%;
-  height: 520px;
+  flex: 1;
+  max-height: 520px;
   background-color: white;
   border-radius: 24px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.08);
