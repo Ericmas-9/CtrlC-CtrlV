@@ -14,6 +14,7 @@ const EventGalleryModal = ({ plan, userProfile, onClose }) => {
 
   useEffect(() => {
     fetchPhotos();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plan.id]);
 
   const fetchPhotos = async () => {

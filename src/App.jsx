@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import './index.css';
 import TopBar from './components/TopBar';
 import BottomNav from './components/BottomNav';
@@ -19,11 +19,8 @@ import Login from './screens/Login';
 import Register from './screens/Register';
 import UpdatePassword from './screens/UpdatePassword';
 import { supabase } from './utils/supabaseClient';
-import { useUserLocation } from './contexts/UserLocationContext';
-
 function App() {
   const { t } = useLanguage();
-  const { userLocation } = useUserLocation();
   const [session, setSession] = useState(null);
   const [authView, setAuthView] = useState('login');
   const [currentTab, setCurrentTab] = useState('discover');
@@ -170,6 +167,7 @@ function App() {
     });
 
     return () => subscription.unsubscribe();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchUserProfile]);
 
   const fetchPlans = async () => {

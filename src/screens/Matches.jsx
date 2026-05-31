@@ -44,7 +44,8 @@ const Matches = ({ matches, userPlans = [], onInfo, onUpdatePlan, onDeletePlan, 
         });
         setPlanAvgRatings(avgs);
       });
-  }, [activeTab]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, userPlans, matches]);
 
   const now = new Date();
   const isActive = (p) => !p.eventDate || new Date(p.eventDate) >= now;
