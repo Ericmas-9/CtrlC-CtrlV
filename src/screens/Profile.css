@@ -270,6 +270,26 @@
   color: var(--color-turquoise);
 }
 
+.gps-city-btn {
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  background: var(--color-turquoise);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.gps-city-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .profile-form {
   background-color: white;
   padding: 20px;

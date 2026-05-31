@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import './index.css';
 import TopBar from './components/TopBar';
 import BottomNav from './components/BottomNav';
@@ -19,9 +19,11 @@ import Login from './screens/Login';
 import Register from './screens/Register';
 import UpdatePassword from './screens/UpdatePassword';
 import { supabase } from './utils/supabaseClient';
+import { useUserLocation } from './contexts/UserLocationContext';
 
 function App() {
   const { t } = useLanguage();
+  const { userLocation } = useUserLocation();
   const [session, setSession] = useState(null);
   const [authView, setAuthView] = useState('login');
   const [currentTab, setCurrentTab] = useState('discover');
@@ -35,12 +37,14 @@ function App() {
   const [profileLoadError, setProfileLoadError] = useState(null);
   const [usersInCity, setUsersInCity] = useState(0);
 
-  const fetchUsersInCity = async (city) => {
+  const fetchUsersInCity = async (city, excludeUserId) => {
     if (!city) return;
-    const { count, error } = await supabase
+    let query = supabase
       .from('perfiles_usuario')
       .select('id', { count: 'exact', head: true })
-      .ilike('city', city);
+      .ilike('city', `%${city}%`);
+    if (excludeUserId) query = query.neq('id', excludeUserId);
+    const { count, error } = await query;
     if (!error) setUsersInCity(count || 0);
   };
 
@@ -91,7 +95,7 @@ function App() {
         // Existing profile found — use it
         const profile = mapProfileRow(data, userId);
         setUserProfile(profile);
-        if (data.city) fetchUsersInCity(data.city);
+        if (data.city) fetchUsersInCity(data.city, userId);
       } else {
         // No profile row exists → brand-new user. Auto-insert one.
         console.info('No profile found for user, auto-creating...');
@@ -546,6 +550,8 @@ function App() {
     const dbUpdates = {};
     if (updates.eventDate !== undefined) dbUpdates.event_date = updates.eventDate;
     if (updates.maxMembers !== undefined) dbUpdates.max_members = updates.maxMembers;
+    if (updates.minAge !== undefined) dbUpdates.min_age = updates.minAge;
+    if (updates.maxAge !== undefined) dbUpdates.max_age = updates.maxAge;
 
     const { error } = await supabase
       .from('planes')
@@ -729,10 +735,18 @@ function App() {
       }
       case 'notifications':
         return <Notifications notifications={notifications} onClose={() => setCurrentTab('discover')} />;
-      case 'settings':
-        return <Settings 
+      case 'settings': {
+        const now2 = new Date();
+        const settingsHistory = [
+          ...squads.filter(s => s.creatorId === userProfile.id && s.eventDate && new Date(s.eventDate) < now2)
+                   .map(s => ({ ...s, role: 'organizer' })),
+          ...matches.filter(m => m.squad?.creatorId !== userProfile.id && m.squad?.eventDate && new Date(m.squad.eventDate) < now2)
+                    .map(m => ({ ...m.squad, role: 'participant' })),
+        ].sort((a, b) => new Date(b.eventDate) - new Date(a.eventDate));
+        return <Settings
           userProfile={userProfile}
-          onBack={() => setCurrentTab('discover')} 
+          planHistory={settingsHistory}
+          onBack={() => setCurrentTab('discover')}
           onLogout={async () => {
             // BUG FIX: Clear local state FIRST so the login screen renders immediately
             // without waiting for the Supabase auth event to propagate.
@@ -747,6 +761,7 @@ function App() {
             await supabase.auth.signOut();
           }}
         />;
+      }
       default:
         return <SquadFeed squads={squads} onLike={handleLike} onInfo={handleOpenInfo} />;
     }

@@ -128,7 +128,12 @@ const PlanDetailsModal = ({ squad, onClose, onJoin, isJoined, onOpenChat }) => {
           )}
 
           <div className="modal-badges">
-            <span className="badge"><Calendar size={14} /> {t('today')}</span>
+            <span className="badge">
+              <Calendar size={14} />
+              {squad.eventDate
+                ? new Date(squad.eventDate).toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+                : t('today')}
+            </span>
             <span className="badge"><MapPin size={14} /> {squad.location}</span>
             {distanceText && <span className="badge"><MapPin size={14} /> {distanceText}</span>}
             <span className="badge"><Users size={14} /> {squad.membersCount} {t('going')}</span>

@@ -99,6 +99,83 @@
   cursor: not-allowed;
 }
 
+/* ── Barra de cerca ── */
+.location-search-bar {
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--color-gray-200);
+  background: white;
+  position: relative;
+  z-index: 10;
+}
+
+.location-search-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1.5px solid var(--color-gray-200);
+  border-radius: 10px;
+  font-size: 14px;
+  font-family: var(--font-family);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.location-search-input:focus {
+  border-color: var(--color-turquoise);
+}
+
+.location-search-btn {
+  padding: 8px 12px;
+  background: var(--color-turquoise);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.location-search-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.location-search-results {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+  background: white;
+  border-bottom: 1px solid var(--color-gray-200);
+  max-height: 160px;
+  overflow-y: auto;
+  position: relative;
+  z-index: 10;
+}
+
+.location-search-results li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 14px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--color-gray-800);
+  transition: background 0.15s;
+}
+
+.location-search-results li:hover {
+  background: var(--color-gray-50);
+}
+
+.location-search-results li svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--color-turquoise);
+}
+
 /* Custom Pin for Location Picker (different anchor than MapView) */
 .location-picker-pin {
   width: 32px;

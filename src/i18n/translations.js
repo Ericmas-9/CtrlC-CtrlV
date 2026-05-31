@@ -29,6 +29,7 @@ export const translations = {
     searchLocation: 'Cerca una ubicació...',
     searching: 'Cercant...',
     confirmLocation: 'Confirmar Ubicació',
+    selectOnMap: 'Clica al mapa o cerca per seleccionar',
     openMap: 'Obrir Mapa',
     noResults: 'No hi ha resultats',
     configuration: 'CONFIGURACIÓ',
@@ -56,6 +57,8 @@ export const translations = {
     'Sports ⚽': 'Esports ⚽', 'Drinking 🍺': 'Beure 🍺', 'Music 🎵': 'Música 🎵',
     'Outdoors 🌲': 'Aire Lliure 🌲', 'Chill ☕': 'Tranquil ☕', 'Beach 🌊': 'Platja 🌊',
     'Hiking 🥾': 'Senderisme 🥾', 'Padel 🎾': 'Pàdel 🎾', 'Gaming 🎮': 'Gaming 🎮',
+    'Food 🍕': 'Menjar 🍕', 'Dancing 💃': 'Ballar 💃', 'Art 🎨': 'Art 🎨',
+    'Fitness 💪': 'Fitness 💪', 'Cinema 🎬': 'Cinema 🎬', 'Cycling 🚴': 'Ciclisme 🚴',
     
     // Settings
     account: 'COMPTE', phoneNumber: 'Número de telèfon', privacy: 'Privacitat',
@@ -112,6 +115,7 @@ export const translations = {
     ratePlan: 'Valorar',
     ratingSubmitted: 'Valoració enviada!',
     noRating: 'Sense valoració',
+    avgRating: 'Mitjana del grup',
 
     // Plans actius / Historial
     activePlans: 'Plans actius',
@@ -228,7 +232,8 @@ export const translations = {
     description: 'DESCRIPCIÓN', descPlaceholder: 'Describe tu plan...',
     location: 'UBICACIÓN', locPlaceholder: 'Buscar ubicación...', useMine: 'La mía',
     searchLocation: 'Buscar ubicación...', searching: 'Buscando...',
-    confirmLocation: 'Confirmar Ubicación', openMap: 'Abrir Mapa', noResults: 'Sin resultados',
+    confirmLocation: 'Confirmar Ubicación',
+    selectOnMap: 'Toca el mapa o busca para seleccionar', openMap: 'Abrir Mapa', noResults: 'Sin resultados',
     configuration: 'CONFIGURACIÓN', maxGroupSize: 'Tamaño máx. del grupo',
     targetAgeRange: 'Rango de edad', min: 'Mín:', to: 'a', max: 'Máx:',
     activityTags: 'ETIQUETAS ({count})', postSquadPlan: 'Publicar SquadPlan',
@@ -245,6 +250,8 @@ export const translations = {
     'Sports ⚽': 'Deportes ⚽', 'Drinking 🍺': 'Beber 🍺', 'Music 🎵': 'Música 🎵',
     'Outdoors 🌲': 'Aire Libre 🌲', 'Chill ☕': 'Tranquilo ☕', 'Beach 🌊': 'Playa 🌊',
     'Hiking 🥾': 'Senderismo 🥾', 'Padel 🎾': 'Pádel 🎾', 'Gaming 🎮': 'Gaming 🎮',
+    'Food 🍕': 'Comida 🍕', 'Dancing 💃': 'Bailar 💃', 'Art 🎨': 'Arte 🎨',
+    'Fitness 💪': 'Fitness 💪', 'Cinema 🎬': 'Cine 🎬', 'Cycling 🚴': 'Ciclismo 🚴',
     
     // Settings
     account: 'CUENTA', phoneNumber: 'Número de teléfono', privacy: 'Privacidad',
@@ -301,6 +308,7 @@ export const translations = {
     ratePlan: 'Valorar',
     ratingSubmitted: '¡Valoración enviada!',
     noRating: 'Sin valoración',
+    avgRating: 'Media del grupo',
 
     // Plans actius / Historial
     activePlans: 'Planes activos',
@@ -410,7 +418,8 @@ export const translations = {
     description: 'DESCRIPTION', descPlaceholder: 'Describe your plan...',
     location: 'LOCATION', locPlaceholder: 'Search location...', useMine: 'Use Mine',
     searchLocation: 'Search location...', searching: 'Searching...',
-    confirmLocation: 'Confirm Location', openMap: 'Open Map', noResults: 'No results found',
+    confirmLocation: 'Confirm Location',
+    selectOnMap: 'Tap the map or search to select', openMap: 'Open Map', noResults: 'No results found',
     configuration: 'CONFIGURATION', maxGroupSize: 'Max Group Size',
     targetAgeRange: 'Target Age Range', min: 'Min:', to: 'to', max: 'Max:',
     activityTags: 'ACTIVITY TAGS ({count})', postSquadPlan: 'Post SquadPlan',
@@ -427,6 +436,8 @@ export const translations = {
     'Sports ⚽': 'Sports ⚽', 'Drinking 🍺': 'Drinking 🍺', 'Music 🎵': 'Music 🎵',
     'Outdoors 🌲': 'Outdoors 🌲', 'Chill ☕': 'Chill ☕', 'Beach 🌊': 'Beach 🌊',
     'Hiking 🥾': 'Hiking 🥾', 'Padel 🎾': 'Padel 🎾', 'Gaming 🎮': 'Gaming 🎮',
+    'Food 🍕': 'Food 🍕', 'Dancing 💃': 'Dancing 💃', 'Art 🎨': 'Art 🎨',
+    'Fitness 💪': 'Fitness 💪', 'Cinema 🎬': 'Cinema 🎬', 'Cycling 🚴': 'Cycling 🚴',
     
     // Settings
     account: 'ACCOUNT', phoneNumber: 'Phone Number', privacy: 'Privacy',
@@ -483,6 +494,7 @@ export const translations = {
     ratePlan: 'Rate',
     ratingSubmitted: 'Rating submitted!',
     noRating: 'No rating yet',
+    avgRating: 'Group average',
 
     // Plans actius / Historial
     activePlans: 'Active Plans',

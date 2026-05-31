@@ -513,3 +513,28 @@
   font-size: 11px;
   font-weight: 700;
 }
+
+/* ── Mitjana de valoració del grup ── */
+.plan-avg-rating {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin: 4px 0 6px;
+}
+
+.plan-avg-rating--empty {
+  opacity: 0.5;
+}
+
+.plan-avg-value {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-amber);
+  margin-left: 2px;
+}
+
+.plan-avg-count {
+  font-size: 11px;
+  color: var(--color-gray-400, #94a3b8);
+  font-weight: 500;
+}

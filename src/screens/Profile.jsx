@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react';
-import { Camera, User as UserIcon, Loader, MapPin } from 'lucide-react';
+import { Camera, User as UserIcon, Loader, MapPin, Navigation } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
 import { supabase } from '../utils/supabaseClient';
+import { useUserLocation } from '../contexts/UserLocationContext';
 import './Profile.css';
 
 const BUCKET = 'squad-images';
@@ -9,7 +10,9 @@ const BUCKET = 'squad-images';
 
 const Profile = ({ userProfile, setUserProfile, planHistory = [] }) => {
   const { t } = useLanguage();
+  const { requestLocation } = useUserLocation();
   const [isEditing, setIsEditing] = useState(false);
+  const [isDetectingCity, setIsDetectingCity] = useState(false);
   const [editForm, setEditForm] = useState({
     ...userProfile,
     bio: userProfile.bio || ''
@@ -25,6 +28,28 @@ const Profile = ({ userProfile, setUserProfile, planHistory = [] }) => {
     return new Date(dateStr).toLocaleDateString(undefined, {
       day: 'numeric', month: 'short', year: 'numeric'
     });
+  };
+
+  // ── Detecta la ciutat per GPS ────────────────────────────────────────────────
+  const handleDetectCity = async () => {
+    setIsDetectingCity(true);
+    try {
+      const loc = await requestLocation();
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${loc.lat}&lon=${loc.lng}`
+      );
+      const data = await res.json();
+      const city =
+        data.address?.city ||
+        data.address?.town ||
+        data.address?.village ||
+        data.address?.county || '';
+      if (city) setEditForm(prev => ({ ...prev, city }));
+    } catch (e) {
+      console.warn('GPS city detect failed', e);
+    } finally {
+      setIsDetectingCity(false);
+    }
   };
 
   // ── Avatar Upload ────────────────────────────────────────────────────────────
@@ -171,6 +196,26 @@ const Profile = ({ userProfile, setUserProfile, planHistory = [] }) => {
               value={editForm.age}
               onChange={(e) => setEditForm({ ...editForm, age: parseInt(e.target.value) || '' })}
             />
+          </div>
+          <div className="input-group">
+            <label>{t('locationLabel')}</label>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <input
+                type="text"
+                value={editForm.city || ''}
+                onChange={(e) => setEditForm({ ...editForm, city: e.target.value })}
+                style={{ flex: 1 }}
+              />
+              <button
+                type="button"
+                className="gps-city-btn"
+                onClick={handleDetectCity}
+                disabled={isDetectingCity}
+                title={t('locateMe')}
+              >
+                {isDetectingCity ? <Loader size={15} className="btn-spinner" /> : <Navigation size={15} />}
+              </button>
+            </div>
           </div>
           <div className="input-group">
             <label>{t('bioLabel')}</label>

@@ -42,7 +42,7 @@ const CreatePlan = ({ onCreate, userProfile }) => {
   const [formError, setFormError] = useState(null);
   const planImageInputRef = useRef(null);
 
-  const availableTags = ['Sports ⚽', 'Drinking 🍺', 'Music 🎵', 'Outdoors 🌲', 'Chill ☕', 'Beach 🌊', 'Hiking 🥾', 'Padel 🎾', 'Gaming 🎮'];
+  const availableTags = ['Sports ⚽', 'Drinking 🍺', 'Music 🎵', 'Outdoors 🌲', 'Chill ☕', 'Beach 🌊', 'Hiking 🥾', 'Padel 🎾', 'Gaming 🎮', 'Food 🍕', 'Dancing 💃', 'Art 🎨', 'Fitness 💪', 'Cinema 🎬', 'Cycling 🚴'];
 
   const toggleTag = (tag) => {
     if (selectedTags.includes(tag)) {

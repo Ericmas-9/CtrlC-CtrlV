@@ -1,15 +1,50 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MessageSquare, MapPin, Users, ClipboardList, Settings, Trash2, Check, X, Calendar, Star, History, RotateCcw, GalleryHorizontal, MessageCircle } from 'lucide-react';
 import './Matches.css';
 import { useLanguage } from '../i18n/LanguageContext';
+import { supabase } from '../utils/supabaseClient';
 
-const Matches = ({ matches, userPlans = [], onInfo, onUpdatePlan, onDeletePlan, ratedPlanIds = new Set(), onRatePlan, passedSquads = [], onUndoPass, onOpenGallery }) => {
+const Matches = ({ matches, userPlans = [], onInfo, onUpdatePlan, onDeletePlan, ratedPlanIds = new Set(), onRatePlan, passedSquads = [], onUndoPass, onOpenGallery, onOpenChat }) => {
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState('active');
+  const [planAvgRatings, setPlanAvgRatings] = useState({});
   const [editingPlan, setEditingPlan] = useState(null);
   const [editDate, setEditDate] = useState('');
   const [editMaxMembers, setEditMaxMembers] = useState('');
+  const [editMinAge, setEditMinAge] = useState('');
+  const [editMaxAge, setEditMaxAge] = useState('');
   const [saving, setSaving] = useState(false);
+
+  // Fetch avg rating per plan quan s'obre l'historial
+  useEffect(() => {
+    if (activeTab !== 'history') return;
+    const historyIds = [
+      ...userPlans.filter(p => p.eventDate && new Date(p.eventDate) < new Date()).map(p => p.id),
+      ...matches.filter(m => m.squad?.eventDate && new Date(m.squad.eventDate) < new Date()).map(m => m.squad.id),
+    ];
+    if (historyIds.length === 0) return;
+
+    supabase
+      .from('plan_ratings')
+      .select('plan_id, stars')
+      .in('plan_id', historyIds)
+      .then(({ data }) => {
+        if (!data) return;
+        const grouped = {};
+        data.forEach(r => {
+          if (!grouped[r.plan_id]) grouped[r.plan_id] = [];
+          grouped[r.plan_id].push(r.stars);
+        });
+        const avgs = {};
+        Object.entries(grouped).forEach(([planId, stars]) => {
+          avgs[planId] = {
+            avg: (stars.reduce((a, b) => a + b, 0) / stars.length).toFixed(1),
+            count: stars.length,
+          };
+        });
+        setPlanAvgRatings(avgs);
+      });
+  }, [activeTab]);
 
   const now = new Date();
   const isActive = (p) => !p.eventDate || new Date(p.eventDate) >= now;
@@ -47,6 +82,8 @@ const Matches = ({ matches, userPlans = [], onInfo, onUpdatePlan, onDeletePlan, 
     setEditingPlan(plan);
     setEditDate(toLocalInputValue(plan.eventDate));
     setEditMaxMembers(plan.maxMembers ?? '');
+    setEditMinAge(plan.minAge ?? 18);
+    setEditMaxAge(plan.maxAge ?? 99);
   };
 
   const closeSettings = () => setEditingPlan(null);
@@ -56,6 +93,8 @@ const Matches = ({ matches, userPlans = [], onInfo, onUpdatePlan, onDeletePlan, 
     await onUpdatePlan(editingPlan.id, {
       eventDate: editDate ? new Date(editDate).toISOString() : null,
       maxMembers: editMaxMembers !== '' ? (parseInt(editMaxMembers) || null) : null,
+      minAge: parseInt(editMinAge) || 18,
+      maxAge: parseInt(editMaxAge) || 99,
     });
     setSaving(false);
     setEditingPlan(null);
@@ -77,6 +116,9 @@ const Matches = ({ matches, userPlans = [], onInfo, onUpdatePlan, onDeletePlan, 
           onClick={() => setActiveTab('active')}
         >
           {t('activePlans')}
+          {(myActivePlans.length + activeMatches.length) > 0 && (
+            <span className="skipped-count-badge">{myActivePlans.length + activeMatches.length}</span>
+          )}
         </button>
         <button
           className={`matches-tab ${activeTab === 'history' ? 'matches-tab--active' : ''}`}
@@ -196,6 +238,7 @@ const Matches = ({ matches, userPlans = [], onInfo, onUpdatePlan, onDeletePlan, 
             <div className="matches-list">
               {history.map((plan, idx) => {
                 const isRated = ratedPlanIds.has(plan.id);
+                const avgData = planAvgRatings[plan.id];
                 return (
                   <div key={`${plan.id}-${idx}`} className="history-plan-card" onClick={() => onInfo && onInfo(plan)}>
                     <div className="my-plan-thumb" style={{ backgroundImage: `url(${plan.image})` }} />
@@ -207,6 +250,28 @@ const Matches = ({ matches, userPlans = [], onInfo, onUpdatePlan, onDeletePlan, 
                         </span>
                       </div>
                       <p className="match-latest-msg">📅 {formatDate(plan.eventDate)}</p>
+
+                      {/* Mitjana del grup */}
+                      {avgData ? (
+                        <div className="plan-avg-rating">
+                          {[1,2,3,4,5].map(i => (
+                            <Star
+                              key={i}
+                              size={12}
+                              fill={i <= Math.round(parseFloat(avgData.avg)) ? 'var(--color-amber)' : 'none'}
+                              color={i <= Math.round(parseFloat(avgData.avg)) ? 'var(--color-amber)' : 'var(--color-gray-300)'}
+                            />
+                          ))}
+                          <span className="plan-avg-value">{avgData.avg}</span>
+                          <span className="plan-avg-count">({avgData.count})</span>
+                        </div>
+                      ) : (
+                        <div className="plan-avg-rating plan-avg-rating--empty">
+                          <Star size={12} color="var(--color-gray-300)" />
+                          <span className="plan-avg-count">{t('noRating')}</span>
+                        </div>
+                      )}
+
                       <div className="match-meta" style={{ justifyContent: 'space-between' }}>
                         <span className="meta-badge"><MapPin size={12} /> {plan.location}</span>
                         <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
@@ -308,6 +373,27 @@ const Matches = ({ matches, userPlans = [], onInfo, onUpdatePlan, onDeletePlan, 
               <span className="plan-settings-hint">
                 {editingPlan.membersCount} {t('members')} — {t('min')} {editingPlan.membersCount}
               </span>
+            </div>
+
+            <div className="plan-settings-field">
+              <label>{t('targetAgeRange')}</label>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <input
+                  type="number"
+                  min={18} max={editMaxAge || 99}
+                  value={editMinAge}
+                  onChange={e => setEditMinAge(e.target.value)}
+                  style={{ width: '70px' }}
+                />
+                <span style={{ color: 'var(--color-gray-400)', fontSize: '13px' }}>—</span>
+                <input
+                  type="number"
+                  min={editMinAge || 18} max={99}
+                  value={editMaxAge}
+                  onChange={e => setEditMaxAge(e.target.value)}
+                  style={{ width: '70px' }}
+                />
+              </div>
             </div>
 
             <div className="plan-settings-actions">

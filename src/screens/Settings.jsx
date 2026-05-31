@@ -3,10 +3,25 @@ import { ChevronLeft, Lock, Shield, Link, Star, Ban, History, Eye, LogOut, Exter
 import { useLanguage } from '../i18n/LanguageContext';
 import './Settings.css';
 
-const Settings = ({ onLogout }) => {
+const PRIVACY_KEY = 'squadup_privacy';
+const loadPrivacy = () => {
+  try { return JSON.parse(localStorage.getItem(PRIVACY_KEY)) || {}; } catch { return {}; }
+};
+
+const Settings = ({ onLogout, planHistory = [] }) => {
   const { t, language, changeLanguage } = useLanguage();
-  const [activeSubView, setActiveSubView] = useState(null); 
+  const [activeSubView, setActiveSubView] = useState(null);
   const [visibility, setVisibility] = useState('public');
+
+  const saved = loadPrivacy();
+  const [showMyAge, setShowMyAge] = useState(saved.showMyAge ?? true);
+  const [lastSeen, setLastSeen] = useState(saved.lastSeen ?? true);
+  const [readReceipts, setReadReceipts] = useState(saved.readReceipts ?? false);
+
+  const savePrivacy = (key, value) => {
+    const current = loadPrivacy();
+    localStorage.setItem(PRIVACY_KEY, JSON.stringify({ ...current, [key]: value }));
+  };
 
   const handleBack = () => setActiveSubView(null);
 
@@ -41,7 +56,7 @@ const Settings = ({ onLogout }) => {
               <p>{t('showMyAgeDesc')}</p>
             </div>
             <label className="toggle-switch">
-              <input type="checkbox" defaultChecked />
+              <input type="checkbox" checked={showMyAge} onChange={e => { setShowMyAge(e.target.checked); savePrivacy('showMyAge', e.target.checked); }} />
               <span className="slider"></span>
             </label>
           </div>
@@ -51,7 +66,7 @@ const Settings = ({ onLogout }) => {
               <p>{t('lastSeenDesc')}</p>
             </div>
             <label className="toggle-switch">
-              <input type="checkbox" defaultChecked />
+              <input type="checkbox" checked={lastSeen} onChange={e => { setLastSeen(e.target.checked); savePrivacy('lastSeen', e.target.checked); }} />
               <span className="slider"></span>
             </label>
           </div>
@@ -61,7 +76,7 @@ const Settings = ({ onLogout }) => {
               <p>{t('readReceiptsDesc')}</p>
             </div>
             <label className="toggle-switch">
-              <input type="checkbox" />
+              <input type="checkbox" checked={readReceipts} onChange={e => { setReadReceipts(e.target.checked); savePrivacy('readReceipts', e.target.checked); }} />
               <span className="slider"></span>
             </label>
           </div>
@@ -189,29 +204,29 @@ const Settings = ({ onLogout }) => {
         <div style={{ width: '40px' }}></div>
       </div>
       <div className="sub-view-content">
-        <div className="timeline-container">
-          <div className="timeline-item">
-            <div className="timeline-dot"></div>
-            <div className="timeline-content">
-              <h4>Padel Match</h4>
-              <p>April 20th, 2026</p>
-            </div>
+        {planHistory.length === 0 ? (
+          <div style={{ padding: '40px 24px', textAlign: 'center', color: 'var(--color-gray-400)' }}>
+            <History size={40} style={{ marginBottom: '12px', opacity: 0.4 }} />
+            <p style={{ fontSize: '14px' }}>{t('noRecentActivity')}</p>
           </div>
-          <div className="timeline-item">
-            <div className="timeline-dot"></div>
-            <div className="timeline-content">
-              <h4>Beach Bonfire</h4>
-              <p>April 12th, 2026</p>
-            </div>
+        ) : (
+          <div className="timeline-container">
+            {planHistory.map((plan, idx) => (
+              <div key={`${plan.id}-${idx}`} className="timeline-item">
+                <div className="timeline-dot"></div>
+                <div className="timeline-content">
+                  <h4>{plan.planTitle}</h4>
+                  <p>
+                    {plan.eventDate
+                      ? new Date(plan.eventDate).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' })
+                      : '—'}
+                  </p>
+                  <span className={`role-badge-small role-badge-small--${plan.role}`}>{t(plan.role)}</span>
+                </div>
+              </div>
+            ))}
           </div>
-          <div className="timeline-item">
-            <div className="timeline-dot"></div>
-            <div className="timeline-content">
-              <h4>Taco Tuesday</h4>
-              <p>March 30th, 2026</p>
-            </div>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );

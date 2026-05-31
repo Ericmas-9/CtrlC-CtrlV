@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
-import { X, MapPin } from 'lucide-react';
+import { X, MapPin, Search } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
 import './LocationPickerMap.css';
 
@@ -12,14 +12,50 @@ const LocationPickerMap = ({ initialLocation, onConfirm, onClose }) => {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
   const markerRef = useRef(null);
-  
+
   const [currentAddress, setCurrentAddress] = useState(initialLocation?.address || '');
   const [currentCoords, setCurrentCoords] = useState(
-    initialLocation?.lat && initialLocation?.lng 
-      ? { lat: initialLocation.lat, lng: initialLocation.lng } 
+    initialLocation?.lat && initialLocation?.lng
+      ? { lat: initialLocation.lat, lng: initialLocation.lng }
       : { lat: DEFAULT_CENTER[0], lng: DEFAULT_CENTER[1] }
   );
   const [isFetchingAddress, setIsFetchingAddress] = useState(false);
+
+  // ── Cerca ────────────────────────────────────────────────────────────────────
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+    setIsSearching(true);
+    setSearchResults([]);
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=5`
+      );
+      const data = await res.json();
+      setSearchResults(data);
+    } catch {
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const selectSearchResult = (result) => {
+    const lat = parseFloat(result.lat);
+    const lng = parseFloat(result.lon);
+    setSearchResults([]);
+    setSearchQuery('');
+    setCurrentCoords({ lat, lng });
+    setCurrentAddress(result.display_name.split(', ').slice(0, 3).join(', '));
+    if (mapRef.current && markerRef.current) {
+      mapRef.current.flyTo([lat, lng], MAP_ZOOM);
+      markerRef.current.setLatLng([lat, lng]);
+    }
+  };
 
   const fetchAddress = async (lat, lng) => {
     setIsFetchingAddress(true);
@@ -111,13 +147,37 @@ const LocationPickerMap = ({ initialLocation, onConfirm, onClose }) => {
           </button>
         </div>
         
+        {/* ── Barra de cerca ── */}
+        <form className="location-search-bar" onSubmit={handleSearch}>
+          <input
+            type="text"
+            className="location-search-input"
+            placeholder={t('searchLocation')}
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+          />
+          <button type="submit" className="location-search-btn" disabled={isSearching}>
+            <Search size={16} />
+          </button>
+        </form>
+        {searchResults.length > 0 && (
+          <ul className="location-search-results">
+            {searchResults.map(r => (
+              <li key={r.place_id} onClick={() => selectSearchResult(r)}>
+                <MapPin size={13} />
+                <span>{r.display_name.split(', ').slice(0, 4).join(', ')}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+
         <div className="location-picker-map-container" ref={containerRef}></div>
         
         <div className="location-picker-footer">
           <div className="selected-address-box">
             <MapPin size={18} color="var(--color-turquoise)" />
             <span className="address-text">
-              {isFetchingAddress ? t('searching') : (currentAddress || t('searchLocation'))}
+              {isFetchingAddress ? t('searching') : (currentAddress || t('selectOnMap'))}
             </span>
           </div>
           <button 
