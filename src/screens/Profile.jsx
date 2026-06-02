@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Camera, User as UserIcon, Loader, MapPin, Navigation } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
 import { supabase } from '../utils/supabaseClient';
@@ -23,6 +23,44 @@ const Profile = ({ userProfile, setUserProfile, planHistory = [] }) => {
   const [saveError, setSaveError] = useState(null);
   const fileInputRef = useRef(null);
 
+  // City autocomplete
+  const [cityInput, setCityInput] = useState(userProfile.city || '');
+  const [citySuggestions, setCitySuggestions] = useState([]);
+  const [showCitySuggestions, setShowCitySuggestions] = useState(false);
+  const [cityIsValid, setCityIsValid] = useState(true); // existing city already valid
+
+  useEffect(() => {
+    const delay = setTimeout(async () => {
+      if (cityInput.length > 2 && !cityIsValid) {
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(cityInput)}&format=json&addressdetails=1&limit=6&featuretype=city`
+          );
+          const data = await res.json();
+          const cityTypes = ['city', 'town', 'village', 'municipality', 'administrative', 'suburb', 'borough', 'quarter'];
+          const filtered = data.filter(r => cityTypes.includes(r.type) || cityTypes.includes(r.class));
+          setCitySuggestions(filtered);
+          setShowCitySuggestions(filtered.length > 0);
+        } catch (e) {
+          console.error('Nominatim error:', e);
+        }
+      } else {
+        setCitySuggestions([]);
+        setShowCitySuggestions(false);
+      }
+    }, 400);
+    return () => clearTimeout(delay);
+  }, [cityInput, cityIsValid]);
+
+  const handleSelectCity = (suggestion) => {
+    const addr = suggestion.address;
+    const name = addr.city || addr.town || addr.village || addr.municipality || addr.suburb || suggestion.display_name.split(',')[0];
+    setCityInput(name);
+    setEditForm(prev => ({ ...prev, city: name }));
+    setCityIsValid(true);
+    setShowCitySuggestions(false);
+  };
+
   const formatDate = (dateStr) => {
     if (!dateStr) return '—';
     return new Date(dateStr).toLocaleDateString(undefined, {
@@ -44,7 +82,11 @@ const Profile = ({ userProfile, setUserProfile, planHistory = [] }) => {
         data.address?.town ||
         data.address?.village ||
         data.address?.county || '';
-      if (city) setEditForm(prev => ({ ...prev, city }));
+      if (city) {
+        setCityInput(city);
+        setEditForm(prev => ({ ...prev, city }));
+        setCityIsValid(true);
+      }
     } catch (e) {
       console.warn('GPS city detect failed', e);
     } finally {
@@ -98,8 +140,12 @@ const Profile = ({ userProfile, setUserProfile, planHistory = [] }) => {
 
   // ── Profile text save ────────────────────────────────────────────────────────
   const handleSave = async () => {
+    if (cityInput && !cityIsValid) {
+      setSaveError(t('cityNotValid'));
+      return;
+    }
     setIsSaving(true);
-    // Optimistic UI update
+    setSaveError(null);
     setUserProfile({ ...editForm });
     setIsEditing(false);
 
@@ -197,13 +243,19 @@ const Profile = ({ userProfile, setUserProfile, planHistory = [] }) => {
               onChange={(e) => setEditForm({ ...editForm, age: parseInt(e.target.value) || '' })}
             />
           </div>
-          <div className="input-group">
+          <div className="input-group" style={{ position: 'relative' }}>
             <label>{t('locationLabel')}</label>
             <div style={{ display: 'flex', gap: '8px' }}>
               <input
                 type="text"
-                value={editForm.city || ''}
-                onChange={(e) => setEditForm({ ...editForm, city: e.target.value })}
+                value={cityInput}
+                onChange={(e) => {
+                  setCityInput(e.target.value);
+                  setEditForm(prev => ({ ...prev, city: e.target.value }));
+                  setCityIsValid(false);
+                }}
+                onBlur={() => setTimeout(() => setShowCitySuggestions(false), 200)}
+                autoComplete="off"
                 style={{ flex: 1 }}
               />
               <button
@@ -216,6 +268,21 @@ const Profile = ({ userProfile, setUserProfile, planHistory = [] }) => {
                 {isDetectingCity ? <Loader size={15} className="btn-spinner" /> : <Navigation size={15} />}
               </button>
             </div>
+            {showCitySuggestions && (
+              <ul className="city-suggestions-dropdown">
+                {citySuggestions.map((s, idx) => {
+                  const addr = s.address;
+                  const name = addr.city || addr.town || addr.village || addr.municipality || addr.suburb || s.display_name.split(',')[0];
+                  const country = addr.country || '';
+                  return (
+                    <li key={idx} className="city-suggestion-item" onMouseDown={() => handleSelectCity(s)}>
+                      <MapPin size={13} style={{ marginRight: '8px', flexShrink: 0, color: '#94a3b8' }} />
+                      <span>{name}<span style={{ color: '#94a3b8', fontSize: '13px' }}>, {country}</span></span>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
           </div>
           <div className="input-group">
             <label>{t('bioLabel')}</label>

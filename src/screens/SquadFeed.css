@@ -29,11 +29,17 @@
 
 .feed-header {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 8px;
   margin: 10px 0 16px 0;
   color: var(--color-gray-500);
   font-size: 14px;
+}
+
+.feed-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .feed-header strong {

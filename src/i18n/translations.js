@@ -193,6 +193,7 @@ export const translations = {
     // Profile
     avatarUploadFailed: 'No s\'ha pogut pujar la foto. Torna-ho a intentar.',
     profileUpdateFailed: 'Hi ha hagut un problema actualitzant el teu perfil.',
+    cityNotValid: 'Selecciona una ubicació vàlida de la llista.',
 
     // Event Gallery
     eventGallery: 'Galeria de l\'event',
@@ -398,6 +399,7 @@ export const translations = {
     imageUploadFailed: 'No se pudo subir la imagen. Se usará la imagen por defecto.',
     avatarUploadFailed: 'No se pudo subir la foto. Inténtalo de nuevo.',
     profileUpdateFailed: 'Hubo un problema actualizando tu perfil.',
+    cityNotValid: 'Selecciona una ubicación válida de la lista.',
 
     // Event Gallery
     eventGallery: 'Galería del evento',
@@ -603,6 +605,7 @@ export const translations = {
     imageUploadFailed: 'Failed to upload image. Default image will be used.',
     avatarUploadFailed: 'Could not upload photo. Please try again.',
     profileUpdateFailed: 'There was a problem updating your profile.',
+    cityNotValid: 'Please select a valid location from the list.',
 
     // Event Gallery
     eventGallery: 'Event Gallery',

@@ -69,6 +69,10 @@ function Register({ onNavigateToLogin }) {
       setFormError(t('agreeToTermsError'));
       return;
     }
+    if (cityInput && !cityIsValid) {
+      setFormError(t('cityNotValid'));
+      return;
+    }
 
     setLoading(true);
 

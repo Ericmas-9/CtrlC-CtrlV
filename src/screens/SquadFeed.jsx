@@ -162,11 +162,11 @@ const SquadFeed = ({ squads, onLike, onPass, onInfo, usersInCity = 0, userCity =
   return (
     <div key="list-view" className="squad-feed fade-in">
       <div className="feed-header">
-        <p>{usersInCity} {usersInCity === 1 ? t('userSingular') : t('userPlural')} a <strong>{userCity}</strong></p>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div className="feed-header-top">
+          <p>{usersInCity} {usersInCity === 1 ? t('userSingular') : t('userPlural')} a <strong>{userCity}</strong></p>
           <SwipeCounter />
-          <ViewToggle />
         </div>
+        <ViewToggle />
       </div>
 
       <div className="card-stack">
