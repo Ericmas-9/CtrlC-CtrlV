@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 
 const FREE_SWIPE_LIMIT = 10;
 const UNLOCK_CODES = ['PREMIUM2026', 'ILIMITADO', 'VIP100'];
@@ -68,7 +68,7 @@ export const useSwipeLimit = () => {
   const canSwipe = data.unlocked || data.count < FREE_SWIPE_LIMIT;
 
   // Guard against double-counting if animation fires twice
-  const swipeInFlight = { current: false };
+  const swipeInFlight = useRef(false);
 
   const registerSwipe = useCallback(() => {
     if (swipeInFlight.current) return;

@@ -44,7 +44,6 @@ const Matches = ({ matches, userPlans = [], onInfo, onUpdatePlan, onDeletePlan, 
         });
         setPlanAvgRatings(avgs);
       });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, userPlans, matches]);
 
   const now = new Date();
