@@ -429,21 +429,16 @@ function App() {
     // Optimistically bump membersCount so badge updates instantly
     setSquads(prev => prev.map(s => s.id === squad.id ? { ...s, membersCount: (s.membersCount || 0) + 1 } : s));
 
-    // Save the join to Supabase
+    // Save the join to Supabase. The DB trigger on plan_members INSERT
+    // increments members_count automatically — no separate RPC needed.
     if (session?.user?.id) {
       const { error } = await supabase
         .from('plan_members')
         .insert([{ plan_id: squad.id, user_id: session.user.id }]);
-      if (error) console.error('Error joining plan in DB:', error);
-    }
-
-    // Increment members_count atomically via RPC (SECURITY DEFINER bypasses RLS)
-    if (squad.id) {
-      const { error: rpcError } = await supabase.rpc('increment_members_count', { plan_id: squad.id });
-      if (rpcError) {
-        console.error('Error incrementing members_count via rpc:', rpcError);
+      if (error) {
+        console.error('Error joining plan in DB:', error);
       } else {
-        // Refresh plans AND joined-plans so both lists stay consistent
+        // Refresh plans AND joined-plans so the count reflects the DB value
         const refreshed = await fetchPlans();
         if (refreshed && session?.user?.id) {
           await fetchJoinedPlans(session.user.id, refreshed);
