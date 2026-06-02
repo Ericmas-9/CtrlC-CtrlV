@@ -3,7 +3,7 @@ import { Compass, PlusCircle, MessageSquare, User } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
 import './BottomNav.css';
 
-const BottomNav = ({ currentTab, setCurrentTab }) => {
+const BottomNav = ({ currentTab, setCurrentTab, unreadChatCount = 0 }) => {
   const { t } = useLanguage();
   
   return (
@@ -27,7 +27,12 @@ const BottomNav = ({ currentTab, setCurrentTab }) => {
         className={`nav-item ${currentTab === 'matches' ? 'active' : ''}`}
         onClick={() => setCurrentTab('matches')}
       >
-        <MessageSquare size={24} className="nav-icon" />
+        <div className="nav-icon-wrapper">
+          <MessageSquare size={24} className="nav-icon" />
+          {unreadChatCount > 0 && (
+            <span className="unread-chat-badge">{unreadChatCount > 9 ? '9+' : unreadChatCount}</span>
+          )}
+        </div>
         <span className={`nav-label ${currentTab === 'matches' ? 'active-label' : ''}`}>{t('Chats')}</span>
       </button>
 

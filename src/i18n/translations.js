@@ -190,6 +190,7 @@ export const translations = {
     publishing: 'Publicant...',
     ageValidationError: 'La teva edat ({age}) ha d\'estar dins del rang {min}-{max}.',
     imageUploadFailed: 'No s\'ha pogut pujar la imatge. S\'usarà la imatge per defecte.',
+    errorCreatingPlan: 'Error al crear el pla. Torna-ho a intentar.',
     // Profile
     avatarUploadFailed: 'No s\'ha pogut pujar la foto. Torna-ho a intentar.',
     profileUpdateFailed: 'Hi ha hagut un problema actualitzant el teu perfil.',
@@ -397,6 +398,7 @@ export const translations = {
     publishing: 'Publicando...',
     ageValidationError: 'Tu edad ({age}) debe estar dentro del rango {min}-{max}.',
     imageUploadFailed: 'No se pudo subir la imagen. Se usará la imagen por defecto.',
+    errorCreatingPlan: 'Error al crear el plan. Inténtalo de nuevo.',
     avatarUploadFailed: 'No se pudo subir la foto. Inténtalo de nuevo.',
     profileUpdateFailed: 'Hubo un problema actualizando tu perfil.',
     cityNotValid: 'Selecciona una ubicación válida de la lista.',
@@ -603,6 +605,7 @@ export const translations = {
     publishing: 'Publishing...',
     ageValidationError: 'Your age ({age}) must be within the range {min}-{max}.',
     imageUploadFailed: 'Failed to upload image. Default image will be used.',
+    errorCreatingPlan: 'Error creating plan. Please try again.',
     avatarUploadFailed: 'Could not upload photo. Please try again.',
     profileUpdateFailed: 'There was a problem updating your profile.',
     cityNotValid: 'Please select a valid location from the list.',

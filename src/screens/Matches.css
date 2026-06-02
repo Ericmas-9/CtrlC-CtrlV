@@ -538,3 +538,41 @@
   color: var(--color-gray-400, #94a3b8);
   font-weight: 500;
 }
+
+/* ── Unread chat highlight ── */
+.match-list-item--unread {
+  border-left: 3px solid var(--color-turquoise);
+  background: linear-gradient(90deg, rgba(0, 210, 200, 0.06) 0%, white 40%);
+  box-shadow: 0 2px 12px rgba(0, 210, 200, 0.1);
+}
+
+.my-plan-thumb {
+  position: relative;
+}
+
+.chat-unread-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 10px;
+  background: #ff4b4b;
+  color: white;
+  font-size: 10px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  box-shadow: 0 2px 6px rgba(255, 75, 75, 0.35);
+  border: 2px solid white;
+  animation: badgeAppear 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 5;
+}
+
+@keyframes badgeAppear {
+  from { transform: scale(0); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}

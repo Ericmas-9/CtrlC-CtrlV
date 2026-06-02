@@ -263,6 +263,9 @@ function App() {
   const [pendingRatings, setPendingRatings] = useState([]); // plans to rate (modal queue)
   const [ratedPlanIds, setRatedPlanIds] = useState(new Set()); // already rated this session
 
+  // --- UNREAD CHATS STATE ---
+  const [unreadChats, setUnreadChats] = useState({}); // { planId: unreadCount }
+
   // --- RATING HANDLERS ---
   const fetchPendingRatings = async (userId) => {
     // 1. Plans the user has joined
@@ -470,6 +473,10 @@ function App() {
     setShowMatchOverlay(false);
     setActiveChatId(matchId);
     setActiveChatData(foundMatch);
+    // Clear unread count for this chat
+    if (foundMatch?.squad?.id) {
+      setUnreadChats(prev => { const next = { ...prev }; delete next[foundMatch.squad.id]; return next; });
+    }
   };
 
   const handleCreatePlan = async (newPlan) => {
@@ -498,8 +505,7 @@ function App() {
 
     if (error) {
       console.error('Error saving plan:', error);
-      alert('Error al guardar el plan: ' + error.message);
-      return;
+      throw new Error(error.message || 'Error al guardar el plan');
     }
 
     // Insert creator into plan_members so RLS allows them to send chat messages
@@ -606,7 +612,17 @@ function App() {
           const isJoined = currentJoined.has(msg.plan_id);
           const isCreator = currentSquads.some(sq => sq.id === msg.plan_id && sq.creatorId === s.user.id);
           if (!isJoined && !isCreator) return;
-          if (activeChatDataRef.current?.squad?.id === msg.plan_id) return;
+          const isChatOpen = activeChatDataRef.current?.squad?.id === msg.plan_id;
+
+          // Track unread chats (only if this chat is not currently open)
+          if (!isChatOpen) {
+            setUnreadChats(prev => ({
+              ...prev,
+              [msg.plan_id]: (prev[msg.plan_id] || 0) + 1
+            }));
+          }
+
+          if (isChatOpen) return;
 
           const { data: sender } = await supabase
             .from('perfiles_usuario').select('full_name, photo_url').eq('id', msg.sender_id).single();
@@ -697,6 +713,10 @@ function App() {
             const found = otherMatches.find(m => m.id === id);
             setActiveChatId(id);
             setActiveChatData(found);
+            // Clear unread count for this chat
+            if (found?.squad?.id) {
+              setUnreadChats(prev => { const next = { ...prev }; delete next[found.squad.id]; return next; });
+            }
           }}
           userPlans={allUserPlans}
           onInfo={handleOpenInfo}
@@ -707,6 +727,7 @@ function App() {
           passedSquads={passedSquads}
           onUndoPass={handleUndoPass}
           onOpenGallery={setGalleryPlan}
+          unreadChats={unreadChats}
         />;
       }
       case 'profile': {
@@ -914,7 +935,11 @@ function App() {
 
       {/* Bottom Navigation Area */}
       {!hideBottomNav && (
-        <BottomNav currentTab={currentTab} setCurrentTab={setCurrentTab} />
+        <BottomNav
+          currentTab={currentTab}
+          setCurrentTab={setCurrentTab}
+          unreadChatCount={Object.values(unreadChats).filter(c => c > 0).length}
+        />
       )}
 
       {/* Match Overlay (Full Screen Modal) */}
@@ -967,6 +992,8 @@ function App() {
               }
               setActiveChatId(matchIdToOpen);
               setActiveChatData(matchToOpen);
+              // Clear unread count for this chat
+              setUnreadChats(prev => { const next = { ...prev }; delete next[selectedPlanDetails.id]; return next; });
             }}
           />
         );

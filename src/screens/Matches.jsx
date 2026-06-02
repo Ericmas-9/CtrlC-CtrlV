@@ -4,7 +4,7 @@ import './Matches.css';
 import { useLanguage } from '../i18n/LanguageContext';
 import { supabase } from '../utils/supabaseClient';
 
-const Matches = ({ matches, userPlans = [], onInfo, onUpdatePlan, onDeletePlan, ratedPlanIds = new Set(), onRatePlan, passedSquads = [], onUndoPass, onOpenGallery, onOpenChat }) => {
+const Matches = ({ matches, userPlans = [], onInfo, onUpdatePlan, onDeletePlan, ratedPlanIds = new Set(), onRatePlan, passedSquads = [], onUndoPass, onOpenGallery, onOpenChat, unreadChats = {} }) => {
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState('active');
   const [planAvgRatings, setPlanAvgRatings] = useState({});
@@ -193,9 +193,14 @@ const Matches = ({ matches, userPlans = [], onInfo, onUpdatePlan, onDeletePlan, 
               <div className="matches-list">
                 {activeMatches.map(match => {
                   const squad = match.squad;
+                  const unreadCount = unreadChats[squad.id] || 0;
                   return (
-                    <div key={match.id} className="match-list-item" onClick={() => onInfo && onInfo(squad)}>
-                      <div className="my-plan-thumb" style={{ backgroundImage: `url(${squad.image})` }} />
+                    <div key={match.id} className={`match-list-item ${unreadCount > 0 ? 'match-list-item--unread' : ''}`} onClick={() => onInfo && onInfo(squad)}>
+                      <div className="my-plan-thumb" style={{ backgroundImage: `url(${squad.image})` }}>
+                        {unreadCount > 0 && (
+                          <span className="chat-unread-badge">{unreadCount > 9 ? '9+' : unreadCount}</span>
+                        )}
+                      </div>
                       <div className="match-item-content">
                         <div className="match-item-header">
                           <h4>{squad.planTitle || squad.squadName}</h4>

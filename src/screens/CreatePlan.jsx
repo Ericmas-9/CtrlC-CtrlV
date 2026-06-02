@@ -168,77 +168,84 @@ const CreatePlan = ({ onCreate, userProfile }) => {
     const creatorAge = parseInt(userProfile.age);
     if (creatorAge && (creatorAge < parseInt(minAge) || creatorAge > parseInt(maxAge))) {
       setFormError(t('ageValidationError', { age: creatorAge, min: minAge, max: maxAge }));
-      setIsSubmitting(false);
       return;
     }
 
     setIsSubmitting(true);
+    setFormError(null);
 
-    // Upload plan image if one was chosen
-    let finalImageUrl = DEFAULT_PLAN_IMAGE;
-    if (planImageFile) {
-      setIsUploadingImage(true);
-      try {
-        const ext = planImageFile.name.split('.').pop();
-        const fileName = `plans/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+    try {
+      // Upload plan image if one was chosen
+      let finalImageUrl = DEFAULT_PLAN_IMAGE;
+      if (planImageFile) {
+        setIsUploadingImage(true);
+        try {
+          const ext = planImageFile.name.split('.').pop();
+          const fileName = `plans/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
 
-        const { error: uploadError } = await supabase.storage
-          .from(BUCKET)
-          .upload(fileName, planImageFile, { upsert: false });
+          const { error: uploadError } = await supabase.storage
+            .from(BUCKET)
+            .upload(fileName, planImageFile, { upsert: false });
 
-        if (uploadError) throw uploadError;
+          if (uploadError) throw uploadError;
 
-        const { data: urlData } = supabase.storage
-          .from(BUCKET)
-          .getPublicUrl(fileName);
+          const { data: urlData } = supabase.storage
+            .from(BUCKET)
+            .getPublicUrl(fileName);
 
-        finalImageUrl = urlData.publicUrl;
-      } catch (err) {
-        console.error('Plan image upload failed:', err);
-        setFormError(t('imageUploadFailed'));
-        finalImageUrl = DEFAULT_PLAN_IMAGE;
-      } finally {
-        setIsUploadingImage(false);
+          finalImageUrl = urlData.publicUrl;
+        } catch (err) {
+          console.error('Plan image upload failed:', err);
+          setFormError(t('imageUploadFailed'));
+          finalImageUrl = DEFAULT_PLAN_IMAGE;
+        } finally {
+          setIsUploadingImage(false);
+        }
       }
+
+      const newSquad = {
+        id: `squad-${Date.now()}`,
+        squadName: `${userProfile.name}'s Squad`,
+        meta: `Ages ${minAge}-${maxAge} · Just created`,
+        planTitle: title,
+        location: locationObj.address || 'Santa Monica, CA',
+        lat: locationObj.lat,
+        lng: locationObj.lng,
+        minAge: parseInt(minAge),
+        maxAge: parseInt(maxAge),
+        maxGroupSize: parseInt(maxGroupSize),
+        distance: '0.0 mi',
+        membersCount: 1,
+        image: finalImageUrl,
+        leaderAvatar: userProfile.photo,
+        tags: [...selectedTags.map(tag => tag.split(' ')[0]), ...customTags],
+        description: description || 'Looking to form a squad for this plan!',
+        eventDate: eventDate || null
+      };
+
+      await onCreate(newSquad);
+
+      // Cleanup form
+      setTitle('');
+      setDescription('');
+      setMaxGroupSize(8);
+      setMinAge(21);
+      setMaxAge(35);
+      setAddressInput('');
+      setLocationObj({ address: '', lat: null, lng: null });
+      setSelectedTags([]);
+      setCustomTags([]);
+      setCustomTagInput('');
+      setCustomTagError('');
+      setEventDate('');
+      clearPlanImage();
+      setFormError(null);
+    } catch (err) {
+      console.error('Error creating plan:', err);
+      setFormError(err.message || t('errorCreatingPlan'));
+    } finally {
+      setIsSubmitting(false);
     }
-
-    const newSquad = {
-      id: `squad-${Date.now()}`,
-      squadName: `${userProfile.name}'s Squad`,
-      meta: `Ages ${minAge}-${maxAge} · Just created`,
-      planTitle: title,
-      location: locationObj.address || 'Santa Monica, CA',
-      lat: locationObj.lat,
-      lng: locationObj.lng,
-      minAge: parseInt(minAge),
-      maxAge: parseInt(maxAge),
-      maxGroupSize: parseInt(maxGroupSize),
-      distance: '0.0 mi',
-      membersCount: 1,
-      image: finalImageUrl,
-      leaderAvatar: userProfile.photo,
-      tags: [...selectedTags.map(tag => tag.split(' ')[0]), ...customTags],
-      description: description || 'Looking to form a squad for this plan!',
-      eventDate: eventDate || null
-    };
-
-    await onCreate(newSquad);
-
-    // Cleanup form
-    setTitle('');
-    setDescription('');
-    setMaxGroupSize(8);
-    setMinAge(21);
-    setMaxAge(35);
-    setAddressInput('');
-    setLocationObj({ address: '', lat: null, lng: null });
-    setSelectedTags([]);
-    setCustomTags([]);
-    setCustomTagInput('');
-    setCustomTagError('');
-    setEventDate('');
-    clearPlanImage();
-    setIsSubmitting(false);
   };
 
   const isLoading = isUploadingImage || isSubmitting;
@@ -407,12 +414,12 @@ const CreatePlan = ({ onCreate, userProfile }) => {
             <div className="age-range-inputs">
               <div className="age-input-box">
                 <span>{t('min')}</span>
-                <input type="number" value={minAge} onChange={(e) => setMinAge(e.target.value)} min="18" max="100" />
+                <input type="number" value={minAge} onChange={(e) => { setMinAge(e.target.value); setFormError(null); }} min="18" max="100" />
               </div>
               <span style={{ color: 'var(--color-gray-400)' }}>{t('to')}</span>
               <div className="age-input-box">
                 <span>{t('max')}</span>
-                <input type="number" value={maxAge} onChange={(e) => setMaxAge(e.target.value)} min="18" max="100" />
+                <input type="number" value={maxAge} onChange={(e) => { setMaxAge(e.target.value); setFormError(null); }} min="18" max="100" />
               </div>
             </div>
           </div>
