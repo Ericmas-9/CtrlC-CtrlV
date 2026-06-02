@@ -21,7 +21,7 @@ const SquadFeed = ({ squads, onLike, onPass, onInfo, usersInCity = 0, userCity =
   const [viewMode, setViewMode] = useState('list'); // 'list' | 'map'
   const [showLimitModal, setShowLimitModal] = useState(false);
   const { userLocation } = useUserLocation();
-  const { swipesRemaining, canSwipe, isUnlocked, registerSwipe, unlockWithCode } = useSwipeLimit();
+  const { swipesRemaining, canSwipe, isUnlocked, registerSwipe, unlockWithCode, unlockDirect } = useSwipeLimit();
 
   const handlePass = () => {
     if (!canSwipe) { setShowLimitModal(true); return; }
@@ -226,6 +226,7 @@ const SquadFeed = ({ squads, onLike, onPass, onInfo, usersInCity = 0, userCity =
         <SwipeLimitModal
           onClose={() => setShowLimitModal(false)}
           onUnlock={handleUnlock}
+          onPay={unlockDirect}
         />
       )}
     </div>

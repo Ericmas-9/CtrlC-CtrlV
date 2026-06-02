@@ -103,5 +103,13 @@ export const useSwipeLimit = () => {
     return 'ok';
   }, []);
 
-  return { swipesRemaining, canSwipe, isUnlocked: data.unlocked, registerSwipe, unlockWithCode };
+  const unlockDirect = useCallback(() => {
+    setData(prev => {
+      const next = { ...prev, unlocked: true };
+      writeStorage(next);
+      return next;
+    });
+  }, []);
+
+  return { swipesRemaining, canSwipe, isUnlocked: data.unlocked, registerSwipe, unlockWithCode, unlockDirect };
 };
