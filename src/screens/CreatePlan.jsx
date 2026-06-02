@@ -32,6 +32,9 @@ const CreatePlan = ({ onCreate, userProfile }) => {
   const [showMapModal, setShowMapModal] = useState(false);
 
   const [selectedTags, setSelectedTags] = useState([]);
+  const [customTags, setCustomTags] = useState([]);
+  const [customTagInput, setCustomTagInput] = useState('');
+  const [customTagError, setCustomTagError] = useState('');
   const [eventDate, setEventDate] = useState('');
 
   // ── Plan Image Upload state ──────────────────────────────────────────────────
@@ -50,6 +53,22 @@ const CreatePlan = ({ onCreate, userProfile }) => {
     } else {
       setSelectedTags([...selectedTags, tag]);
     }
+  };
+
+  const handleAddCustomTag = () => {
+    const trimmed = customTagInput.trim();
+    if (!trimmed) return;
+    if (trimmed.length > 20) { setCustomTagError(t('customTagMaxLength')); return; }
+    if (customTags.length >= 5) { setCustomTagError(t('customTagMaxCount')); return; }
+    const allTags = [...availableTags.map(t => t.split(' ')[0].toLowerCase()), ...customTags.map(t => t.toLowerCase())];
+    if (allTags.includes(trimmed.toLowerCase())) { setCustomTagError(t('customTagDuplicate')); return; }
+    setCustomTags(prev => [...prev, trimmed]);
+    setCustomTagInput('');
+    setCustomTagError('');
+  };
+
+  const handleRemoveCustomTag = (tag) => {
+    setCustomTags(prev => prev.filter(t => t !== tag));
   };
 
   // Debounced search for Nominatim
@@ -198,7 +217,7 @@ const CreatePlan = ({ onCreate, userProfile }) => {
       membersCount: 1,
       image: finalImageUrl,
       leaderAvatar: userProfile.photo,
-      tags: selectedTags.map(t => t.split(' ')[0]),
+      tags: [...selectedTags.map(tag => tag.split(' ')[0]), ...customTags],
       description: description || 'Looking to form a squad for this plan!',
       eventDate: eventDate || null
     };
@@ -214,6 +233,9 @@ const CreatePlan = ({ onCreate, userProfile }) => {
     setAddressInput('');
     setLocationObj({ address: '', lat: null, lng: null });
     setSelectedTags([]);
+    setCustomTags([]);
+    setCustomTagInput('');
+    setCustomTagError('');
     setEventDate('');
     clearPlanImage();
     setIsSubmitting(false);
@@ -396,7 +418,7 @@ const CreatePlan = ({ onCreate, userProfile }) => {
           </div>
 
           <div className="input-group">
-            <label>{t('activityTags', { count: selectedTags.length })}</label>
+            <label>{t('activityTags', { count: selectedTags.length + customTags.length })}</label>
             <div className="tags-selector">
               {availableTags.map(tag => (
                 <button
@@ -408,7 +430,38 @@ const CreatePlan = ({ onCreate, userProfile }) => {
                   {t(tag)}
                 </button>
               ))}
+              {customTags.map(tag => (
+                <button
+                  key={tag}
+                  type="button"
+                  className="tag-select-btn tag-custom selected"
+                  onClick={() => handleRemoveCustomTag(tag)}
+                >
+                  {tag} <X size={12} style={{ marginLeft: 4 }} />
+                </button>
+              ))}
             </div>
+
+            <div className="custom-tag-row">
+              <input
+                type="text"
+                className="custom-tag-input"
+                placeholder={t('customTagPlaceholder')}
+                value={customTagInput}
+                maxLength={20}
+                onChange={e => { setCustomTagInput(e.target.value); setCustomTagError(''); }}
+                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddCustomTag(); } }}
+              />
+              <button
+                type="button"
+                className="custom-tag-add-btn"
+                onClick={handleAddCustomTag}
+                disabled={!customTagInput.trim()}
+              >
+                +
+              </button>
+            </div>
+            {customTagError && <p className="custom-tag-error">{customTagError}</p>}
           </div>
         </div>
 

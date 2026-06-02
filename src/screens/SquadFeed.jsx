@@ -5,6 +5,8 @@ import { useLanguage } from '../i18n/LanguageContext';
 import { useUserLocation } from '../contexts/UserLocationContext';
 import { getDistance } from '../utils/distance';
 import MapView from '../components/MapView';
+import { useSwipeLimit } from '../hooks/useSwipeLimit';
+import SwipeLimitModal from '../components/SwipeLimitModal';
 
 const computeCompatibility = (planTags, likedTags) => {
   if (!planTags?.length || !likedTags?.size) return null;
@@ -17,9 +19,13 @@ const SquadFeed = ({ squads, onLike, onPass, onInfo, usersInCity = 0, userCity =
   const [currentIndex, setCurrentIndex] = useState(0);
   const [swipeDirection, setSwipeDirection] = useState(null);
   const [viewMode, setViewMode] = useState('list'); // 'list' | 'map'
+  const [showLimitModal, setShowLimitModal] = useState(false);
   const { userLocation } = useUserLocation();
+  const { swipesRemaining, canSwipe, isUnlocked, registerSwipe, unlockWithCode } = useSwipeLimit();
 
   const handlePass = () => {
+    if (!canSwipe) { setShowLimitModal(true); return; }
+    registerSwipe();
     onPass?.(squads[currentIndex]);
     setSwipeDirection('left');
     setTimeout(() => {
@@ -29,8 +35,29 @@ const SquadFeed = ({ squads, onLike, onPass, onInfo, usersInCity = 0, userCity =
   };
 
   const handleLike = () => {
+    if (!canSwipe) { setShowLimitModal(true); return; }
+    registerSwipe();
     onLike(squads[currentIndex]);
     setCurrentIndex(prev => prev + 1);
+  };
+
+  const handleUnlock = (code) => {
+    const result = unlockWithCode(code);
+    if (result === 'ok') setShowLimitModal(false);
+    return result;
+  };
+
+  // SwipeCounter chip shown in the feed header
+  const SwipeCounter = () => {
+    if (isUnlocked) return (
+      <span className="swipe-counter-chip chip-unlimited">✨ {t('swipeUnlimited')}</span>
+    );
+    const warning = swipesRemaining <= 3;
+    return (
+      <span className={`swipe-counter-chip ${warning ? 'chip-warning' : ''}`}>
+        {t('swipesLeft', { count: swipesRemaining })}
+      </span>
+    );
   };
 
   // ── Shared view toggle pill ──
@@ -136,7 +163,10 @@ const SquadFeed = ({ squads, onLike, onPass, onInfo, usersInCity = 0, userCity =
     <div key="list-view" className="squad-feed fade-in">
       <div className="feed-header">
         <p>{usersInCity} {usersInCity === 1 ? t('userSingular') : t('userPlural')} a <strong>{userCity}</strong></p>
-        <ViewToggle />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <SwipeCounter />
+          <ViewToggle />
+        </div>
       </div>
 
       <div className="card-stack">
@@ -191,6 +221,13 @@ const SquadFeed = ({ squads, onLike, onPass, onInfo, usersInCity = 0, userCity =
         <button className="action-btn btn-info" onClick={() => onInfo(currentSquad)}><Info size={24} color="var(--color-amber)" /></button>
         <button className="action-btn btn-like" onClick={handleLike}><Heart size={36} fill="white" color="white" /></button>
       </div>
+
+      {showLimitModal && (
+        <SwipeLimitModal
+          onClose={() => setShowLimitModal(false)}
+          onUnlock={handleUnlock}
+        />
+      )}
     </div>
   );
 };
